@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\AttendanceSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +84,29 @@ Route::middleware(['auth.custom'])->group(function () {
     Route::middleware(['role:Staff'])->group(function () {
         Route::get('/staff/dashboard', [DashboardController::class, 'staffDashboard'])->name('dashboard.staff');
         Route::get('/staff/reportes', [DashboardController::class, 'viewReports'])->name('staff.reportes');
+    });
+    
+    // =====================================================================
+    // GESTIÓN DE SESIONES DE CATEQUESIS
+    // =====================================================================
+    
+    Route::prefix('sessions')->name('sessions.')->group(function () {
+        // Listar y ver sesiones (todos los usuarios autenticados)
+        Route::get('/', [AttendanceSessionController::class, 'index'])->name('index');
+        Route::get('/{session}', [AttendanceSessionController::class, 'show'])->name('show');
+        
+        // Crear, editar y eliminar sesiones (solo Admin y Profesor)
+        Route::middleware(['role:Admin,Profesor'])->group(function () {
+            Route::get('/create', [AttendanceSessionController::class, 'create'])->name('create');
+            Route::post('/', [AttendanceSessionController::class, 'store'])->name('store');
+            Route::get('/{session}/edit', [AttendanceSessionController::class, 'edit'])->name('edit');
+            Route::put('/{session}', [AttendanceSessionController::class, 'update'])->name('update');
+            Route::delete('/{session}', [AttendanceSessionController::class, 'destroy'])->name('destroy');
+            Route::get('/{session}/duplicate', [AttendanceSessionController::class, 'duplicate'])->name('duplicate');
+        });
+        
+        // API para calendario
+        Route::get('/api/calendar', [AttendanceSessionController::class, 'calendar'])->name('calendar');
     });
     
     // =====================================================================
