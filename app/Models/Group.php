@@ -28,8 +28,6 @@ class Group extends Model
         'code',
         'name',
         'description',
-        'estado',
-        'unique_id',
     ];
 
     /**

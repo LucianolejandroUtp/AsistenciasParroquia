@@ -29,8 +29,6 @@ class Attendance extends Model
         'student_id',
         'status',
         'notes',
-        'estado',
-        'unique_id',
     ];
 
     /**
@@ -250,7 +248,6 @@ class Attendance extends Model
             [
                 'status' => $status,
                 'notes' => $notes,
-                'estado' => 'ACTIVO',
             ]
         );
     }

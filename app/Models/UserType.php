@@ -9,8 +9,6 @@ class UserType extends Model
     protected $fillable = [
         'name',
         'description',
-        'estado',
-        'unique_id'
     ];
     
     // Usar timestamps personalizados

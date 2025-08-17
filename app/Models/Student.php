@@ -32,8 +32,6 @@ class Student extends Model
         'maternal_surname',
         'order_number',
         'student_code',
-        'estado',
-        'unique_id',
     ];
 
     /**
