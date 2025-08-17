@@ -1,11 +1,100 @@
-@import 'tailwindcss';
+/* Sistema de Asistencias - Primera Comunión */
+/* Estilos personalizados para complementar TinyDash */
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* Variables CSS personalizadas para el contexto parroquial */
+:root {
+  --parroquia-primary: #1b68ff;
+  --parroquia-secondary: #6c757d;
+  --parroquia-success: #3ad29f;
+  --parroquia-warning: #eea303;
+  --parroquia-danger: #dc3545;
+  --parroquia-light: #f8f9fa;
+  --parroquia-dark: #343a40;
+  --parroquia-gold: #ffd700;
+  --parroquia-blue: #0066cc;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* Customizaciones específicas para Primera Comunión */
+.nav-heading {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-left .navbar-brand {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding-bottom: 1rem;
+}
+
+/* Badges de notificación */
+.badge-primary {
+  background-color: var(--parroquia-primary);
+}
+
+.badge-success {
+  background-color: var(--parroquia-success);
+}
+
+/* Estados de asistencia */
+.attendance-present {
+  color: var(--parroquia-success);
+  font-weight: 600;
+}
+
+.attendance-absent {
+  color: var(--parroquia-danger);
+  font-weight: 600;
+}
+
+.attendance-justified {
+  color: var(--parroquia-warning);
+  font-weight: 600;
+}
+
+/* Cards personalizados */
+.card-student {
+  transition: transform 0.2s;
+}
+
+.card-student:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* QR Scanner styles */
+.qr-scanner-container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.qr-scanner-video {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .card-student {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(27, 104, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--parroquia-primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
