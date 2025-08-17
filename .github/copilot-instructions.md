@@ -234,7 +234,25 @@ GET /api/attendances/session/{sessionId}
 - Connect each part to the original plan
 - Maintain educational tone for user learning
 
-**4. PROACTIVE MCP TOOL USAGE** 🛠️
+**4. PAUSE FOR REVIEW & TESTING** ⏸️
+- **CRITICAL**: After each major implementation, STOP and ask for user review
+- User will test functionality manually
+- User will identify any issues or needed corrections
+- User handles commits manually after validating each phase
+- **DO NOT** continue automatically to next phase
+
+**5. CONTROLLED PROGRESSION** 🎯
+- Only proceed to next phase after explicit user approval
+- Respect user's review and testing time
+- Allow for iterative improvements based on user feedback
+- Maintain development momentum while ensuring quality
+
+**6. CURRENT PRIORITY ORDER** 📋
+1. **Fase 4: Gestión de Sesiones de Catequesis** - CRUD sessions, calendar, validations
+2. **Fase 5: Registro de Asistencias** - Individual/mass attendance, QR scanning, tablet UI
+3. **Fase 3: Interfaz Base TinyDash** - Enhanced components, navigation, dashboard
+
+**7. PROACTIVE MCP TOOL USAGE** 🛠️
 - **ALWAYS prioritize** using MCP tools when available and relevant
 - **Maximum tool utilization**: Use memory, context7, playwright, sequential thinking, etc.
 - **Store knowledge**: Use mcp_memory to track project evolution, decisions, and patterns
@@ -243,7 +261,7 @@ GET /api/attendances/session/{sessionId}
 - **Browser automation**: Use mcp_playwright for testing web interfaces
 - **Document conversion**: Use mcp_markitdown for processing external resources
 
-The user prefers an **educational and collaborative approach** where they can understand, review, and contribute to each development decision.
+The user prefers an **educational, collaborative, and controlled approach** where they can understand, review, test, and contribute to each development decision before proceeding.
 
 ## 🛠️ MCP Tools Integration Strategy
 
