@@ -105,7 +105,7 @@
 
 <!-- Filtros y Búsqueda -->
 <div class="row mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="form-group">
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Buscar sesión..." id="search-session">
@@ -118,26 +118,37 @@
         </div>
     </div>
     <div class="col-md-2">
-        <select class="form-control" id="filter-month">
-            <option value="">Todos los meses</option>
-            <option value="2025-08">Agosto 2025</option>
-            <option value="2025-07">Julio 2025</option>
-            <option value="2025-06">Junio 2025</option>
-        </select>
+        <form method="GET" action="{{ route('attendances.history') }}" id="filter-form">
+            <select class="form-control" name="group_id" onchange="document.getElementById('filter-form').submit()">
+                <option value="">Todos los grupos</option>
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}" {{ $groupId == $group->id ? 'selected' : '' }}>
+                        {{ $group->name }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
     </div>
     <div class="col-md-2">
-        <select class="form-control" id="filter-attendance">
-            <option value="">Todas</option>
-            <option value="high">Alta (>80%)</option>
-            <option value="medium">Media (60-80%)</option>
-            <option value="low">Baja (<60%)</option>
-        </select>
+        <form method="GET" action="{{ route('attendances.history') }}" id="date-filter-form">
+            <input type="hidden" name="group_id" value="{{ $groupId }}">
+            <input type="date" class="form-control" name="start_date" value="{{ $startDate }}" 
+                   onchange="document.getElementById('date-filter-form').submit()" placeholder="Fecha inicio">
+        </form>
     </div>
-    <div class="col-md-4 text-right">
-        <button class="btn btn-primary">
+    <div class="col-md-2">
+        <form method="GET" action="{{ route('attendances.history') }}" id="end-date-form">
+            <input type="hidden" name="group_id" value="{{ $groupId }}">
+            <input type="hidden" name="start_date" value="{{ $startDate }}">
+            <input type="date" class="form-control" name="end_date" value="{{ $endDate }}" 
+                   onchange="document.getElementById('end-date-form').submit()" placeholder="Fecha fin">
+        </form>
+    </div>
+    <div class="col-md-3 text-right">
+        <button class="btn btn-primary" onclick="exportHistory()">
             <span class="fe fe-download mr-1"></span>Exportar Historial
         </button>
-        <button class="btn btn-outline-primary">
+        <button class="btn btn-outline-primary" onclick="generateReport()">
             <span class="fe fe-bar-chart-2 mr-1"></span>Generar Reporte
         </button>
     </div>
@@ -174,7 +185,7 @@
 <!-- Vista en Tarjetas (por defecto) -->
 <div id="cards-view">
     <div class="row">
-        @foreach($mockSessions as $session)
+        @forelse($sessions as $session)
         <div class="col-lg-4 col-md-6 mb-4 session-item" 
              data-title="{{ strtolower($session->title) }}" 
              data-month="{{ \Carbon\Carbon::parse($session->date)->format('Y-m') }}"
@@ -185,13 +196,15 @@
                         <div class="col">
                             <h6 class="mb-0">{{ $session->title }}</h6>
                             <small class="text-muted">
-                                {{ \Carbon\Carbon::parse($session->date)->format('d/m/Y') }} - 
-                                {{ \Carbon\Carbon::createFromFormat('H:i', $session->time)->format('H:i') }}
+                                {{ \Carbon\Carbon::parse($session->date)->format('d/m/Y') }}
+                                @if($session->time)
+                                - {{ \Carbon\Carbon::parse($session->time)->format('H:i') }}
+                                @endif
                             </small>
                         </div>
                         <div class="col-auto">
-                            <span class="badge badge-{{ $session->status == 'completed' ? 'success' : 'warning' }}">
-                                {{ $session->status == 'completed' ? 'Completada' : 'Pendiente' }}
+                            <span class="badge badge-success">
+                                Completada
                             </span>
                         </div>
                     </div>
@@ -247,14 +260,15 @@
                                     <span class="fe fe-more-vertical"></span>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="#">
+                                    <a class="dropdown-item" href="{{ route('sessions.show', $session->id) }}">
                                         <span class="fe fe-eye mr-2"></span>Ver Detalles
                                     </a>
                                     <a class="dropdown-item" href="#">
-                                        <span class="fe fe-download mr-2"></span>Exportar
+                                        <span class="fe fe-download mr-2"></span>Exportar Datos
                                     </a>
-                                    <a class="dropdown-item" href="#">
-                                        <span class="fe fe-edit-2 mr-2"></span>Editar
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="{{ route('attendances.register', ['session_id' => $session->id]) }}">
+                                        <span class="fe fe-edit mr-2"></span>Editar Asistencias
                                     </a>
                                 </div>
                             </div>
@@ -263,22 +277,35 @@
                 </div>
             </div>
         </div>
-        @endforeach
-        
-        <!-- Indicador de más sesiones -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-dashed text-center" style="border-style: dashed; border-color: #dee2e6;">
-                <div class="card-body d-flex flex-column justify-content-center" style="min-height: 250px;">
-                    <span class="fe fe-calendar fe-32 text-muted mb-2"></span>
-                    <h6 class="text-muted">Más Sesiones</h6>
-                    <small class="text-muted">+9 sesiones en el historial</small>
-                    <button class="btn btn-outline-primary btn-sm mt-2">
-                        Cargar Más
-                    </button>
+        @empty
+        <div class="col-12">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <span class="fe fe-calendar fe-48 text-muted mb-3 d-block"></span>
+                    <h4 class="text-muted">No hay sesiones registradas</h4>
+                    <p class="text-muted mb-4">
+                        No se encontraron sesiones con los filtros aplicados.<br>
+                        Modifique los filtros o cree una nueva sesión.
+                    </p>
+                    <a href="{{ route('sessions.create') }}" class="btn btn-primary">
+                        <span class="fe fe-plus mr-1"></span>Crear Nueva Sesión
+                    </a>
                 </div>
             </div>
         </div>
+        @endforelse
     </div>
+    
+    <!-- Paginación -->
+    @if($sessions->hasPages())
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-center">
+                {{ $sessions->links() }}
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 <!-- Vista en Tabla (oculta por defecto) -->
@@ -303,14 +330,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($mockSessions as $session)
+                        @foreach($sessions as $session)
                         <tr>
                             <td>
                                 <strong>{{ $session->title }}</strong>
                             </td>
                             <td>
                                 {{ \Carbon\Carbon::parse($session->date)->format('d/m/Y') }}<br>
-                                <small class="text-muted">{{ \Carbon\Carbon::createFromFormat('H:i', $session->time)->format('H:i') }}</small>
+                                @if($session->time)
+                                <small class="text-muted">{{ \Carbon\Carbon::parse($session->time)->format('H:i') }}</small>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge badge-success">{{ $session->present_count }}</span>
@@ -331,8 +360,8 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge badge-{{ $session->status == 'completed' ? 'success' : 'warning' }}">
-                                    {{ $session->status == 'completed' ? 'Completada' : 'Pendiente' }}
+                                <span class="badge badge-success">
+                                    Completada
                                 </span>
                             </td>
                             <td class="text-right">
@@ -443,66 +472,78 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableView = document.getElementById('table-view');
     const chartView = document.getElementById('chart-view');
     
-    // Cambio de vistas
-    viewCards.addEventListener('click', function() {
-        showView('cards');
-    });
+    // Cambio de vistas (solo si existen los elementos)
+    if (viewCards) {
+        viewCards.addEventListener('click', function() {
+            showView('cards');
+        });
+    }
     
-    viewTable.addEventListener('click', function() {
-        showView('table');
-    });
+    if (viewTable) {
+        viewTable.addEventListener('click', function() {
+            showView('table');
+        });
+    }
     
-    viewChart.addEventListener('click', function() {
-        showView('chart');
-        initChart();
-    });
+    if (viewChart) {
+        viewChart.addEventListener('click', function() {
+            showView('chart');
+            initChart();
+        });
+    }
     
     function showView(view) {
-        // Ocultar todas las vistas
-        cardsView.style.display = 'none';
-        tableView.style.display = 'none';
-        chartView.style.display = 'none';
+        // Ocultar todas las vistas (solo si existen)
+        if (cardsView) cardsView.style.display = 'none';
+        if (tableView) tableView.style.display = 'none';
+        if (chartView) chartView.style.display = 'none';
         
-        // Remover clase activa de todos los botones
-        viewCards.classList.remove('active');
-        viewTable.classList.remove('active');
-        viewChart.classList.remove('active');
+        // Remover clase activa de todos los botones (solo si existen)
+        if (viewCards) viewCards.classList.remove('active');
+        if (viewTable) viewTable.classList.remove('active');
+        if (viewChart) viewChart.classList.remove('active');
         
         // Mostrar vista seleccionada
         switch(view) {
             case 'cards':
-                cardsView.style.display = 'block';
-                viewCards.classList.add('active');
+                if (cardsView) cardsView.style.display = 'block';
+                if (viewCards) viewCards.classList.add('active');
                 break;
             case 'table':
-                tableView.style.display = 'block';
-                viewTable.classList.add('active');
+                if (tableView) tableView.style.display = 'block';
+                if (viewTable) viewTable.classList.add('active');
                 break;
             case 'chart':
-                chartView.style.display = 'block';
-                viewChart.classList.add('active');
+                if (chartView) chartView.style.display = 'block';
+                if (viewChart) viewChart.classList.add('active');
                 break;
         }
     }
     
-    // Filtros
+    // Filtros (solo si existen los elementos)
     const searchInput = document.getElementById('search-session');
     const filterMonth = document.getElementById('filter-month');
     const filterAttendance = document.getElementById('filter-attendance');
     
-    searchInput.addEventListener('input', filterSessions);
-    filterMonth.addEventListener('change', filterSessions);
-    filterAttendance.addEventListener('change', filterSessions);
+    if (searchInput) {
+        searchInput.addEventListener('input', filterSessions);
+    }
+    if (filterMonth) {
+        filterMonth.addEventListener('change', filterSessions);
+    }
+    if (filterAttendance) {
+        filterAttendance.addEventListener('change', filterSessions);
+    }
     
     function filterSessions() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const monthFilter = filterMonth.value;
-        const attendanceFilter = filterAttendance.value;
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const monthFilter = filterMonth ? filterMonth.value : '';
+        const attendanceFilter = filterAttendance ? filterAttendance.value : '';
         
         document.querySelectorAll('.session-item').forEach(item => {
-            const title = item.dataset.title;
-            const month = item.dataset.month;
-            const attendance = parseInt(item.dataset.attendance);
+            const title = item.dataset.title || '';
+            const month = item.dataset.month || '';
+            const attendance = parseInt(item.dataset.attendance || '0');
             
             let show = true;
             

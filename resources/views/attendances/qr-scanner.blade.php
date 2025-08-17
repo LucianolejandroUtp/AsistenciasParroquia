@@ -134,6 +134,35 @@
 @endsection
 
 @section('content')
+<!-- Selector de Sesión -->
+@if($activeSessions->count() > 1)
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="mb-0">Seleccionar Sesión para Escaneo</h6>
+                    </div>
+                    <div class="col-auto">
+                        <form method="GET" action="{{ route('attendances.qr-scanner') }}">
+                            <select name="session_id" class="form-control" onchange="this.form.submit()">
+                                @foreach($activeSessions as $session)
+                                    <option value="{{ $session->id }}" {{ $selectedSession && $selectedSession->id == $session->id ? 'selected' : '' }}>
+                                        {{ $session->title }} - {{ $session->date->format('d/m/Y') }} @if($session->time){{ $session->time->format('H:i') }}@endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+@if($selectedSession)
 <!-- Información de la Sesión Activa -->
 <div class="row mb-4">
     <div class="col-12">
@@ -143,20 +172,25 @@
                     <div class="col">
                         <h4 class="text-white mb-1">
                             <i class="fe fe-qr-code mr-2"></i>
-                            {{ $mockSession->title }}
+                            {{ $selectedSession->title }}
                         </h4>
                         <p class="text-white-50 mb-0">
                             <i class="fe fe-calendar mr-1"></i>
-                            {{ \Carbon\Carbon::parse($mockSession->date)->format('l, d \d\e F Y') }}
+                            {{ $selectedSession->date->format('l, d \d\e F Y') }}
+                            @if($selectedSession->time)
                             <i class="fe fe-clock ml-3 mr-1"></i>
-                            {{ \Carbon\Carbon::createFromFormat('H:i', $mockSession->time)->format('H:i A') }}
+                            {{ $selectedSession->time->format('H:i') }}
+                            @endif
                         </p>
+                        @if($selectedSession->description)
+                        <small class="text-white-75">{{ $selectedSession->description }}</small>
+                        @endif
                     </div>
                     <div class="col-auto">
                         <div class="text-right">
                             <span class="badge badge-light badge-lg">Escáner Activo</span>
                             <div class="small text-white-50 mt-1">
-                                <i class="fe fe-wifi"></i> Conectado
+                                <i class="fe fe-wifi"></i> Sesión Activa
                             </div>
                         </div>
                     </div>
@@ -314,8 +348,8 @@
                                     <h6 class="mb-0">{{ $scan->student_name }}</h6>
                                     <small class="text-muted">
                                         <code>{{ $scan->qr_code }}</code>
-                                        <span class="badge badge-{{ $scan->group == 'A' ? 'primary' : 'info' }} badge-sm ml-1">
-                                            Grupo {{ $scan->group }}
+                                        <span class="badge badge-{{ str_contains($scan->group, 'A') ? 'primary' : 'info' }} badge-sm ml-1">
+                                            {{ $scan->group }}
                                         </span>
                                     </small>
                                 </div>
@@ -337,6 +371,14 @@
                         </div>
                     </div>
                     @endforeach
+                    
+                    @if($recentScans->isEmpty())
+                    <div class="text-center text-muted py-3">
+                        <i class="fe fe-qr-code fe-24 mb-2"></i>
+                        <p class="mb-0">No hay escaneos recientes</p>
+                        <small>Los códigos QR escaneados aparecerán aquí</small>
+                    </div>
+                    @endif
                 </div>
                 
                 <!-- Botón para ver historial completo -->
@@ -353,7 +395,7 @@
             <div class="card-body">
                 <h6 class="card-title">Acciones Rápidas</h6>
                 <div class="d-grid gap-2">
-                    <button class="btn btn-outline-primary btn-block mb-2" onclick="window.location.href='{{ route('attendances.register') }}'">
+                    <button class="btn btn-outline-primary btn-block mb-2" onclick="window.location.href='{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}'">
                         <span class="fe fe-edit mr-2"></span>Registro Manual
                     </button>
                     <button class="btn btn-outline-info btn-block mb-2" id="export-session">
@@ -393,6 +435,27 @@
         </div>
     </div>
 </div>
+
+@else
+<!-- Sin sesiones activas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <span class="fe fe-calendar-x fe-48 text-muted mb-3 d-block"></span>
+                <h4 class="text-muted">No hay sesiones activas</h4>
+                <p class="text-muted mb-4">
+                    No se encontraron sesiones activas para escanear códigos QR.<br>
+                    Cree una nueva sesión o active una existente para continuar.
+                </p>
+                <a href="{{ route('sessions.create') }}" class="btn btn-primary">
+                    <span class="fe fe-plus mr-1"></span>Crear Nueva Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @section('additional-js')
@@ -400,6 +463,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     let isScanning = false;
     let scanMode = 'continuous';
+    
+    // Token CSRF para las peticiones AJAX
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const sessionId = {{ $selectedSession ? $selectedSession->id : 'null' }};
     
     // Elementos del DOM
     const startCameraBtn = document.getElementById('start-camera');
@@ -410,30 +477,44 @@ document.addEventListener('DOMContentLoaded', function() {
     const manualSubmit = document.getElementById('manual-submit');
     const recentScansContainer = document.getElementById('recent-scans-container');
     
+    // Verificar que hay sesión seleccionada
+    if (!sessionId) {
+        alert('No hay sesión seleccionada para escanear códigos QR');
+        return;
+    }
+    
     // Iniciar cámara
-    startCameraBtn.addEventListener('click', function() {
-        startCamera();
-    });
+    if (startCameraBtn) {
+        startCameraBtn.addEventListener('click', function() {
+            startCamera();
+        });
+    }
     
     // Detener cámara
-    stopCameraBtn.addEventListener('click', function() {
-        stopCamera();
-    });
+    if (stopCameraBtn) {
+        stopCameraBtn.addEventListener('click', function() {
+            stopCamera();
+        });
+    }
     
     // Entrada manual
-    manualSubmit.addEventListener('click', function() {
-        const qrCode = manualInput.value.trim();
-        if (qrCode) {
-            processQRCode(qrCode);
-            manualInput.value = '';
-        }
-    });
+    if (manualSubmit) {
+        manualSubmit.addEventListener('click', function() {
+            const qrCode = manualInput.value.trim();
+            if (qrCode) {
+                processQRCode(qrCode);
+                manualInput.value = '';
+            }
+        });
+    }
     
-    manualInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            manualSubmit.click();
-        }
-    });
+    if (manualInput) {
+        manualInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                manualSubmit.click();
+            }
+        });
+    }
     
     function startCamera() {
         // Simulación de activación de cámara
@@ -456,13 +537,6 @@ document.addEventListener('DOMContentLoaded', function() {
         startCameraBtn.style.display = 'none';
         stopCameraBtn.style.display = 'inline-block';
         isScanning = true;
-        
-        // Simulación de escaneo automático después de 3 segundos
-        setTimeout(() => {
-            if (isScanning) {
-                simulateQRScan();
-            }
-        }, 3000);
     }
     
     function stopCamera() {
@@ -482,69 +556,57 @@ document.addEventListener('DOMContentLoaded', function() {
         isScanning = false;
     }
     
-    function simulateQRScan() {
-        // Simulación de códigos QR para demo
-        const sampleCodes = [
-            'A-PEDRO-MAR-LOP',
-            'B-LUCIA-SAN-GOM', 
-            'A-MIGUEL-RUI-VAS',
-            'B-SOFIA-CAS-HER'
-        ];
-        
-        const randomCode = sampleCodes[Math.floor(Math.random() * sampleCodes.length)];
-        processQRCode(randomCode);
-    }
-    
     function processQRCode(qrCode) {
         console.log('Procesando QR:', qrCode);
         
-        // Simulación de procesamiento
-        const studentNames = {
-            'A-ANTONY-ALF-VILCH': 'Antony Alexander Alférez Vilchez',
-            'A-MARIA-GON-PER': 'María Elena González Pérez',
-            'B-CARLOS-RAM-SIL': 'Carlos Eduardo Ramírez Silva',
-            'B-ANA-MEN-CAS': 'Ana Sofía Mendoza Castro',
-            'A-PEDRO-MAR-LOP': 'Pedro Martín López',
-            'B-LUCIA-SAN-GOM': 'Lucía Sánchez Gómez',
-            'A-MIGUEL-RUI-VAS': 'Miguel Ruiz Vasco',
-            'B-SOFIA-CAS-HER': 'Sofía Castro Herrera'
-        };
-        
-        const studentName = studentNames[qrCode] || 'Estudiante Desconocido';
-        const group = qrCode.startsWith('A-') ? 'A' : 'B';
-        const isLate = Math.random() > 0.8; // 20% de probabilidad de llegar tarde
-        const status = qrCode in studentNames ? (isLate ? 'late' : 'present') : 'error';
-        
-        // Mostrar modal de confirmación
-        showScanResult(studentName, qrCode, group, status);
-        
-        // Agregar a escaneos recientes
-        addRecentScan(studentName, qrCode, group, status);
-        
-        // Actualizar estadísticas
-        updateScanStats();
-        
-        // Si está en modo continuo, continuar escaneando
-        if (scanMode === 'continuous' && isScanning) {
-            setTimeout(() => {
-                if (isScanning) {
-                    simulateQRScan();
-                }
-            }, 5000);
-        }
+        // Enviar al servidor para procesar
+        fetch('{{ route("attendances.qr-scan") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                qr_code: qrCode,
+                attendance_session_id: sessionId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar modal de confirmación
+                showScanResult(data.data);
+                
+                // Agregar a escaneos recientes
+                addRecentScan(data.data);
+                
+                // Actualizar estadísticas
+                updateScanStats();
+                
+                showToast('Asistencia registrada: ' + data.data.student_name, 'success');
+            } else {
+                showToast('Error: ' + data.message, 'error');
+                console.error('Error al procesar QR:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error de conexión al procesar código QR', 'error');
+        });
     }
     
-    function showScanResult(studentName, qrCode, group, status) {
+    function showScanResult(scanData) {
         const modal = document.getElementById('scanConfirmModal');
         const content = document.getElementById('scan-result-content');
         
         let statusBadge, statusIcon, statusText;
         
-        if (status === 'present') {
+        if (scanData.status === 'Presente') {
             statusBadge = 'success';
             statusIcon = 'check-circle';
             statusText = 'Presente';
-        } else if (status === 'late') {
+        } else if (scanData.status === 'Tarde') {
             statusBadge = 'warning';
             statusIcon = 'clock';
             statusText = 'Tarde';
@@ -556,54 +618,64 @@ document.addEventListener('DOMContentLoaded', function() {
         
         content.innerHTML = `
             <div class="avatar avatar-lg mb-3">
-                <span class="avatar-title rounded-circle bg-soft-${group === 'A' ? 'primary' : 'info'} text-${group === 'A' ? 'primary' : 'info'}">
-                    ${studentName.charAt(0)}
+                <span class="avatar-title rounded-circle bg-soft-${scanData.group === 'Grupo A' ? 'primary' : 'info'} text-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">
+                    ${scanData.student_name.charAt(0)}
                 </span>
             </div>
-            <h5>${studentName}</h5>
+            <h5>${scanData.student_name}</h5>
             <p class="text-muted">
-                <code>${qrCode}</code><br>
-                <span class="badge badge-${group === 'A' ? 'primary' : 'info'}">Grupo ${group}</span>
+                <code>${scanData.qr_code}</code><br>
+                <span class="badge badge-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">${scanData.group}</span>
             </p>
             <div class="alert alert-${statusBadge}">
                 <i class="fe fe-${statusIcon} mr-2"></i>
                 Estado: <strong>${statusText}</strong>
             </div>
             <small class="text-muted">
-                Escaneado el ${new Date().toLocaleString('es-ES')}
+                Registrado a las ${scanData.marked_at}
             </small>
         `;
         
         $(modal).modal('show');
     }
     
-    function addRecentScan(studentName, qrCode, group, status) {
+    function addRecentScan(scanData) {
+        const statusClass = scanData.status === 'Presente' ? 'success' : (scanData.status === 'Tarde' ? 'late' : 'error');
+        const statusIcon = scanData.status === 'Presente' ? 'check' : (scanData.status === 'Tarde' ? 'clock' : 'x');
+        const badgeClass = scanData.status === 'Presente' ? 'success' : (scanData.status === 'Tarde' ? 'warning' : 'danger');
+        
         const scanElement = document.createElement('div');
-        scanElement.className = `card mb-2 recent-scan scan-${status}`;
+        scanElement.className = `card mb-2 recent-scan scan-${statusClass}`;
         scanElement.innerHTML = `
             <div class="card-body py-2">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h6 class="mb-0">${studentName}</h6>
+                        <h6 class="mb-0">${scanData.student_name}</h6>
                         <small class="text-muted">
-                            <code>${qrCode}</code>
-                            <span class="badge badge-${group === 'A' ? 'primary' : 'info'} badge-sm ml-1">
-                                Grupo ${group}
+                            <code>${scanData.qr_code}</code>
+                            <span class="badge badge-${scanData.group === 'Grupo A' ? 'primary' : 'info'} badge-sm ml-1">
+                                ${scanData.group}
                             </span>
                         </small>
                     </div>
                     <div class="col-auto">
                         <div class="text-right">
-                            <span class="badge badge-${status === 'present' ? 'success' : (status === 'late' ? 'warning' : 'danger')}">
-                                <i class="fe fe-${status === 'present' ? 'check' : (status === 'late' ? 'clock' : 'x')}"></i>
-                                ${status === 'present' ? 'Presente' : (status === 'late' ? 'Tarde' : 'Error')}
+                            <span class="badge badge-${badgeClass}">
+                                <i class="fe fe-${statusIcon}"></i>
+                                ${scanData.status}
                             </span>
-                            <div class="small text-muted">${new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</div>
+                            <div class="small text-muted">${scanData.marked_at}</div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Eliminar mensaje de "no hay escaneos" si existe
+        const noScansMessage = recentScansContainer.querySelector('.text-center.text-muted');
+        if (noScansMessage) {
+            noScansMessage.remove();
+        }
         
         recentScansContainer.insertBefore(scanElement, recentScansContainer.firstChild);
         
@@ -615,25 +687,71 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateScanStats() {
-        // Actualizar estadísticas en tiempo real
-        console.log('Actualizando estadísticas de escaneo...');
+        // Incrementar contador de escaneos exitosos
+        const totalScans = document.querySelector('.text-success.h3');
+        const successfulScans = document.querySelector('.text-primary.h3');
+        
+        if (totalScans && successfulScans) {
+            const currentTotal = parseInt(totalScans.textContent) + 1;
+            const currentSuccessful = parseInt(successfulScans.textContent) + 1;
+            
+            totalScans.textContent = currentTotal;
+            successfulScans.textContent = currentSuccessful;
+            
+            // Actualizar tasa de éxito
+            const successRate = document.querySelector('.text-info.h3');
+            if (successRate) {
+                const rate = Math.round((currentSuccessful / currentTotal) * 100);
+                successRate.textContent = rate + '%';
+            }
+        }
+    }
+    
+    function showToast(message, type) {
+        // Implementación simple de toast
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 5000);
     }
     
     // Configuración de modo de escaneo
-    document.getElementById('scan-mode').addEventListener('change', function() {
-        scanMode = this.value;
-    });
+    const scanModeSelect = document.getElementById('scan-mode');
+    if (scanModeSelect) {
+        scanModeSelect.addEventListener('change', function() {
+            scanMode = this.value;
+        });
+    }
     
     // Acciones rápidas
-    document.getElementById('export-session').addEventListener('click', function() {
-        alert('Exportando datos de la sesión...');
-    });
+    const exportBtn = document.getElementById('export-session');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            window.location.href = '{{ route("attendances.history") }}';
+        });
+    }
     
-    document.getElementById('finish-session').addEventListener('click', function() {
-        if (confirm('¿Finalizar la sesión actual? No podrá registrar más asistencias.')) {
-            alert('Sesión finalizada exitosamente');
-        }
-    });
+    const finishBtn = document.getElementById('finish-session');
+    if (finishBtn) {
+        finishBtn.addEventListener('click', function() {
+            if (confirm('¿Finalizar la sesión actual? No podrá registrar más asistencias.')) {
+                // Aquí iría la lógica para finalizar la sesión
+                showToast('Sesión finalizada exitosamente', 'success');
+            }
+        });
+    }
 });
 </script>
 @endsection
