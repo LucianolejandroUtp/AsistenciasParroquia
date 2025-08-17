@@ -1,11 +1,103 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📋 Sistema de Asistencias - Primera Comunión
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistema de gestión de asistencias para estudiantes de Primera Comunión** desarrollado con Laravel 12.0 y template TinyDash Bootstrap.
+
+## 🎯 **Características Principales**
+
+- **👥 Gestión de 78 estudiantes** divididos en 2 grupos (Grupo A: 40, Grupo B: 38)
+- **📱 Sistema QR integrado** para registro rápido de asistencias
+- **🎨 Interfaz moderna** con template TinyDash Bootstrap responsivo
+- **📊 Reportes y estadísticas** de asistencia detallados
+- **🔐 Sistema de autenticación** con roles (Admin, Profesor, Staff)
+
+## 🛠️ **Stack Tecnológico**
+
+- **Backend:** Laravel 12.0 + PHP 8.2+
+- **Frontend:** TinyDash Bootstrap + Vite + TailwindCSS
+- **Base de Datos:** MySQL/MariaDB con esquema personalizado
+- **Códigos QR:** Sistema único basado en sílabas
+- **Hot Reload:** Desarrollo moderno con recarga automática
+
+## 🚀 **Inicio Rápido**
+
+### **Prerrequisitos**
+- PHP 8.2+
+- Composer
+- Node.js 18+
+- MySQL/MariaDB
+
+### **Instalación**
+```bash
+# Clonar e instalar dependencias
+git clone <repository>
+cd AsistenciasParroquia
+composer install
+npm install
+
+# Configurar entorno
+cp .env.example .env
+php artisan key:generate
+
+# Base de datos
+php artisan migrate
+php artisan db:seed
+
+# Iniciar desarrollo
+composer run dev  # Servidor + Queue + Vite con hot reload
+```
+
+## 📚 **Documentación Completa**
+
+### **📋 Requisitos y Planificación**
+- [📝 Requisitos Funcionales](docs/sistema_asistencias/01_requisitos_funcionales.md)
+- [🎯 Casos de Uso](docs/sistema_asistencias/02_casos_uso.md)
+- [📊 Documentación de Base de Datos](docs/sistema_asistencias/database_documentation.md)
+- [🚀 Plan de Implementación por Fases](docs/plan_implementacion/PLAN_FASES_IMPLEMENTACION.md)
+
+### **🔧 Desarrollo y Configuración**
+- [⚙️ Flujo de Desarrollo Laravel 12](docs/desarrollo/desarrollo_actualizado.md)
+- [🛠️ Integración de Herramientas MCP](docs/desarrollo/mcp_integration_update.md)
+- [📁 Estructura de Documentación](docs/desarrollo/documentacion_reorganizada.md)
+
+### **🎨 Recursos de Desarrollo**
+- [📁 Templates y Estilos](docs/recursos_desarrollo/templates_estilos/) - Material de referencia TinyDash
+- [💡 Ejemplos de Código](docs/recursos_desarrollo/ejemplos_codigo/)
+- [🔗 Referencias Externas](docs/recursos_desarrollo/referencias_externas/)
+
+## 🌟 **Funcionalidades del Sistema**
+
+- **📱 Escáner QR integrado** para registro de asistencias
+- **👥 Gestión completa de estudiantes** con información detallada
+- **📅 Sesiones de catequesis** programables y administrables
+- **📊 Dashboard con estadísticas** y visualización de datos
+- **📋 Reportes en PDF/Excel** para administración parroquial
+- **🔒 Autenticación robusta** con control de acceso por roles
+
+## 🚦 **Estado del Proyecto**
+
+### **✅ Completado (Fase 1.1 - 1.2)**
+- ✅ Esquema de base de datos con migraciones
+- ✅ Seeders con generación automática de códigos QR
+- ✅ Integración completa del template TinyDash
+- ✅ Configuración del entorno de desarrollo optimizado
+- ✅ Dashboard principal con estadísticas básicas
+
+### **🔄 En Desarrollo (Fase 1.3)**
+- 🔄 Sistema de autenticación completo
+- 🔄 Middleware de autorización por roles
+
+### **📋 Pendiente**
+- 📋 Sistema completo de escáner QR
+- 📋 Módulo de reportes avanzados
+- 📋 Optimización para tablets y móviles
+
+## 👨‍💻 **Contribución**
+
+Este proyecto sigue las directrices de [Conventional Commits](docs/desarrollo/) y utiliza un flujo de desarrollo moderno con herramientas MCP integradas.
+
+## 📄 **Licencia**
+
+Proyecto desarrollado para uso parroquial. Consultar términos específicos de uso.
 
 ## About Laravel
 
