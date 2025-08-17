@@ -189,9 +189,13 @@ class AttendanceSession extends Model
      */
     public function canTakeAttendance(): bool
     {
-        // Can take attendance for today's sessions or past sessions
-        // But not for future sessions (unless it's today)
-        return $this->date <= now()->toDateString();
+        // En desarrollo, permitir registro para cualquier sesión activa
+        if (config('app.env') === 'local') {
+            return $this->estado === 'ACTIVO';
+        }
+        
+        // En producción, solo permitir para sesiones de hoy o anteriores
+        return $this->date <= now()->toDateString() && $this->estado === 'ACTIVO';
     }
 
     /**
@@ -235,6 +239,74 @@ class AttendanceSession extends Model
             'justified' => $justified,
             'attendance_rate' => round(($present + $late) / $total * 100, 2),
         ];
+    }
+
+    /**
+     * Get session summary for reports and statistics.
+     */
+    public function getSessionSummary(): array
+    {
+        $attendances = $this->attendances;
+        $totalStudents = Student::where('estado', 'ACTIVO')->count(); // Total de estudiantes del sistema
+        $attendanceCount = $attendances->count();
+        
+        $presentCount = $attendances->where('status', 'present')->count();
+        $lateCount = $attendances->where('status', 'late')->count();
+        $absentCount = $totalStudents - $attendanceCount; // Los que no tienen registro se consideran ausentes
+        $justifiedCount = $attendances->where('status', 'justified')->count();
+        
+        $attendancePercentage = $totalStudents > 0 
+            ? round((($presentCount + $lateCount) / $totalStudents) * 100) 
+            : 0;
+
+        return [
+            'total_students' => $totalStudents,
+            'present_count' => $presentCount,
+            'late_count' => $lateCount,
+            'absent_count' => $absentCount,
+            'justified_count' => $justifiedCount,
+            'attendance_percentage' => $attendancePercentage,
+        ];
+    }
+
+    /**
+     * Accessor for attendance percentage
+     */
+    public function getAttendancePercentageAttribute()
+    {
+        return $this->getSessionSummary()['attendance_percentage'];
+    }
+
+    /**
+     * Accessor for present count
+     */
+    public function getPresentCountAttribute()
+    {
+        return $this->getSessionSummary()['present_count'];
+    }
+
+    /**
+     * Accessor for late count
+     */
+    public function getLateCountAttribute()
+    {
+        return $this->getSessionSummary()['late_count'];
+    }
+
+    /**
+     * Accessor for absent count
+     */
+    public function getAbsentCountAttribute()
+    {
+        return $this->getSessionSummary()['absent_count'];
+    }
+
+    /**
+     * Accessor for total students
+     */
+    public function getTotalStudentsAttribute()
+    {
+        return $this->getSessionSummary()['total_students'];
     }
 
     /**
