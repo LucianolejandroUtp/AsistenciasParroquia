@@ -141,8 +141,7 @@ class DashboardController extends Controller
      */
     public function manageUsers()
     {
-        // TODO: Implementar gestión de usuarios
-        return response()->json(['message' => 'Gestión de usuarios - En desarrollo']);
+        return view('admin.users');
     }
 
     /**
@@ -150,8 +149,7 @@ class DashboardController extends Controller
      */
     public function systemSettings()
     {
-        // TODO: Implementar configuración del sistema
-        return response()->json(['message' => 'Configuración del sistema - En desarrollo']);
+        return view('admin.settings');
     }
 
     /**

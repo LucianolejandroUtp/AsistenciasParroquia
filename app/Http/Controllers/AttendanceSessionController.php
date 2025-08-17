@@ -6,22 +6,9 @@ use App\Models\AttendanceSession;
 use App\Http\Requests\AttendanceSessionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class AttendanceSessionController extends Controller implements HasMiddleware
+class AttendanceSessionController extends Controller
 {
-    /**
-     * Define middleware for this controller
-     */
-    public static function middleware(): array
-    {
-        return [
-            'auth.custom',
-            'role:Admin,Profesor' => ['except' => ['index', 'show']],
-            'role:Admin,Profesor,Staff' => ['only' => ['index', 'show']],
-        ];
-    }
 
     /**
      * Display a listing of attendance sessions.
