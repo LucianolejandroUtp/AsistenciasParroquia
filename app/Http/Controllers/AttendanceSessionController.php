@@ -62,7 +62,6 @@ class AttendanceSessionController extends Controller
                 'time' => $request->time,
                 'title' => $request->title ?: 'Catequesis del ' . date('d/m/Y', strtotime($request->date)),
                 'notes' => $request->notes,
-                'estado' => 'ACTIVO',
             ]);
 
             return redirect()
