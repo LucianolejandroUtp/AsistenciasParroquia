@@ -118,58 +118,85 @@
                 </p>
                 <ul class="navbar-nav flex-fill w-100 mb-2">
                     <li class="nav-item dropdown">
-                        <a href="#estudiantes" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
+                        <a href="#estudiantes" data-toggle="collapse" aria-expanded="{{ request()->routeIs('students.*') ? 'true' : 'false' }}" 
+                           class="dropdown-toggle nav-link {{ request()->routeIs('students.*') ? 'active' : '' }}">
                             <i class="fe fe-users fe-16"></i>
                             <span class="ml-3 item-text">Estudiantes</span>
                         </a>
-                        <ul class="collapse list-unstyled pl-4 w-100" id="estudiantes">
+                        <ul class="collapse list-unstyled pl-4 w-100 {{ request()->routeIs('students.*') ? 'show' : '' }}" id="estudiantes">
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Lista Completa</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('students.index') ? 'active' : '' }}" 
+                                   href="{{ route('students.index') }}">
+                                    <span class="ml-1 item-text">Lista Completa</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Grupo A</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('students.group-a') ? 'active' : '' }}" 
+                                   href="{{ route('students.group-a') }}">
+                                    <span class="ml-1 item-text">Grupo A</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Grupo B</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('students.group-b') ? 'active' : '' }}" 
+                                   href="{{ route('students.group-b') }}">
+                                    <span class="ml-1 item-text">Grupo B</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Códigos QR</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('students.qr-codes') ? 'active' : '' }}" 
+                                   href="{{ route('students.qr-codes') }}">
+                                    <span class="ml-1 item-text">Códigos QR</span>
+                                </a>
                             </li>
                         </ul>
                     </li>
 
                     <li class="nav-item dropdown">
-                        <a href="#sesiones" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
+                        <a href="#sesiones" data-toggle="collapse" aria-expanded="{{ request()->routeIs('sessions.*') ? 'true' : 'false' }}" 
+                           class="dropdown-toggle nav-link {{ request()->routeIs('sessions.*') ? 'active' : '' }}">
                             <i class="fe fe-calendar fe-16"></i>
                             <span class="ml-3 item-text">Sesiones</span>
                         </a>
-                        <ul class="collapse list-unstyled pl-4 w-100" id="sesiones">
+                        <ul class="collapse list-unstyled pl-4 w-100 {{ request()->routeIs('sessions.*') ? 'show' : '' }}" id="sesiones">
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Programar</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('sessions.create') ? 'active' : '' }}" 
+                                   href="{{ route('sessions.create') }}">
+                                    <span class="ml-1 item-text">Programar Sesión</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Calendario</span></a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Historial</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('sessions.index') ? 'active' : '' }}" 
+                                   href="{{ route('sessions.index') }}">
+                                    <span class="ml-1 item-text">Todas las Sesiones</span>
+                                </a>
                             </li>
                         </ul>
                     </li>
 
                     <li class="nav-item dropdown">
-                        <a href="#asistencias" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
+                        <a href="#asistencias" data-toggle="collapse" aria-expanded="{{ request()->routeIs('attendances.*') ? 'true' : 'false' }}" 
+                           class="dropdown-toggle nav-link {{ request()->routeIs('attendances.*') ? 'active' : '' }}">
                             <i class="fe fe-check-circle fe-16"></i>
                             <span class="ml-3 item-text">Asistencias</span>
                         </a>
-                        <ul class="collapse list-unstyled pl-4 w-100" id="asistencias">
+                        <ul class="collapse list-unstyled pl-4 w-100 {{ request()->routeIs('attendances.*') ? 'show' : '' }}" id="asistencias">
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Registrar</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('attendances.register') ? 'active' : '' }}" 
+                                   href="{{ route('attendances.register') }}">
+                                    <span class="ml-1 item-text">Registrar</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Escanear QR</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('attendances.qr-scanner') ? 'active' : '' }}" 
+                                   href="{{ route('attendances.qr-scanner') }}">
+                                    <span class="ml-1 item-text">Escanear QR</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3" href="#"><span class="ml-1 item-text">Historial</span></a>
+                                <a class="nav-link pl-3 {{ request()->routeIs('attendances.history') ? 'active' : '' }}" 
+                                   href="{{ route('attendances.history') }}">
+                                    <span class="ml-1 item-text">Historial</span>
+                                </a>
                             </li>
                         </ul>
                     </li>
@@ -181,13 +208,15 @@
                 </p>
                 <ul class="navbar-nav flex-fill w-100 mb-2">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {{ request()->routeIs('reports.statistics') ? 'active' : '' }}" 
+                           href="{{ route('reports.statistics') }}">
                             <i class="fe fe-bar-chart-2 fe-16"></i>
                             <span class="ml-3 item-text">Estadísticas</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {{ request()->routeIs('reports.export') ? 'active' : '' }}" 
+                           href="{{ route('reports.export') }}">
                             <i class="fe fe-file-text fe-16"></i>
                             <span class="ml-3 item-text">Exportar</span>
                         </a>
@@ -201,19 +230,22 @@
                 </p>
                 <ul class="navbar-nav flex-fill w-100 mb-2">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" 
+                           href="{{ route('admin.users') }}">
                             <i class="fe fe-user-plus fe-16"></i>
                             <span class="ml-3 item-text">Usuarios</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" 
+                           href="{{ route('admin.settings') }}">
                             <i class="fe fe-settings fe-16"></i>
                             <span class="ml-3 item-text">Configuración</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {{ request()->routeIs('admin.backup') ? 'active' : '' }}" 
+                           href="{{ route('admin.backup') }}">
                             <i class="fe fe-database fe-16"></i>
                             <span class="ml-3 item-text">Backup</span>
                         </a>
