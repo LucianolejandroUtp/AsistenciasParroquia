@@ -18,10 +18,33 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'user_type_id',
         'name',
         'email',
         'password',
+        'estado',
+        'unique_id'
     ];
+    
+    // Usar timestamps personalizados
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
+    
+    // Relaciones
+    public function userType()
+    {
+        return $this->belongsTo(UserType::class);
+    }
+    
+    public function createdSessions()
+    {
+        return $this->hasMany(AttendanceSession::class, 'created_by');
+    }
+    
+    public function recordedAttendances()
+    {
+        return $this->hasMany(Attendance::class, 'recorded_by');
+    }
 
     /**
      * The attributes that should be hidden for serialization.
