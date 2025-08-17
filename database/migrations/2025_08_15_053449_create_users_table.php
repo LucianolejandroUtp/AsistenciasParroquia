@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_type_id')->constrained('user_types');
             $table->string('name');
-            $table->string('email')->nullable()->unique();
+            $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable(); // nullable si no se requiere login
             $table->rememberToken();
