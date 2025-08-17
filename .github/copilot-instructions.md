@@ -77,10 +77,17 @@ npm run dev    # Vite development server
 npm run build  # Production build
 ```
 
-**Development Server (composer script):**
+**Development Server (PREFERRED METHOD):**
 ```bash
-composer run dev  # Runs server + queue + vite concurrently
+composer run dev  # Runs server + queue + vite concurrently with hot reload
 ```
+
+**⚠️ CRITICAL DEVELOPMENT WORKFLOW:**
+- **ALWAYS use `composer run dev`** for development (not `php artisan serve`)
+- **DO NOT stop and restart** the development server unnecessarily
+- Hot reload is active: changes in Blade, CSS, JS auto-update the browser
+- Only restart if modifying `.env` or `config/` files
+- The server handles Laravel + Queue processing + Asset compilation automatically
 
 ## Code Patterns
 
