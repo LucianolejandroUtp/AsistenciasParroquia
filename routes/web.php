@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\AttendanceSessionController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,13 +93,17 @@ Route::middleware(['auth.custom'])->group(function () {
     // =====================================================================
     
     Route::prefix('sessions')->name('sessions.')->group(function () {
-        // Listar y ver sesiones (todos los usuarios autenticados)
+        // Listar sesiones (todos los usuarios autenticados)
         Route::get('/', [AttendanceSessionController::class, 'index'])->name('index');
+        
+        // Vista de creación (temporal para testing - todos los usuarios)
+        Route::get('/create', [AttendanceSessionController::class, 'create'])->name('create');
+        
+        // Ver sesión específica (todos los usuarios autenticados)
         Route::get('/{session}', [AttendanceSessionController::class, 'show'])->name('show');
         
         // Crear, editar y eliminar sesiones (solo Admin y Profesor)
         Route::middleware(['role:Admin,Profesor'])->group(function () {
-            Route::get('/create', [AttendanceSessionController::class, 'create'])->name('create');
             Route::post('/', [AttendanceSessionController::class, 'store'])->name('store');
             Route::get('/{session}/edit', [AttendanceSessionController::class, 'edit'])->name('edit');
             Route::put('/{session}', [AttendanceSessionController::class, 'update'])->name('update');
@@ -107,6 +113,62 @@ Route::middleware(['auth.custom'])->group(function () {
         
         // API para calendario
         Route::get('/api/calendar', [AttendanceSessionController::class, 'calendar'])->name('calendar');
+    });
+    
+    // =====================================================================
+    // GESTIÓN DE ESTUDIANTES
+    // =====================================================================
+    
+    Route::prefix('students')->name('students.')->group(function () {
+        // Vistas principales de estudiantes (todos los usuarios autenticados)
+        Route::get('/', [StudentController::class, 'index'])->name('index');
+        Route::get('/group-a', [StudentController::class, 'groupA'])->name('group-a');
+        Route::get('/group-b', [StudentController::class, 'groupB'])->name('group-b');
+        Route::get('/qr-codes', [StudentController::class, 'qrCodes'])->name('qr-codes');
+    });
+    
+    // =====================================================================
+    // GESTIÓN DE ASISTENCIAS
+    // =====================================================================
+    
+    Route::prefix('attendances')->name('attendances.')->group(function () {
+        // Registro de asistencias (Admin y Profesor)
+        Route::middleware(['role:Admin,Profesor'])->group(function () {
+            Route::get('/register', [AttendanceController::class, 'register'])->name('register');
+            Route::get('/qr-scanner', [AttendanceController::class, 'qrScanner'])->name('qr-scanner');
+        });
+        
+        // Historial de asistencias (todos los usuarios autenticados)
+        Route::get('/history', [AttendanceController::class, 'history'])->name('history');
+    });
+    
+    // =====================================================================
+    // REPORTES Y ESTADÍSTICAS
+    // =====================================================================
+    
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Estadísticas generales (todos los usuarios autenticados)
+        Route::get('/statistics', function() {
+            return view('reports.statistics');
+        })->name('statistics');
+        
+        // Exportación de datos (Admin y Profesor)
+        Route::middleware(['role:Admin,Profesor'])->group(function () {
+            Route::get('/export', function() {
+                return view('reports.export');
+            })->name('export');
+        });
+    });
+    
+    // =====================================================================
+    // ADMINISTRACIÓN
+    // =====================================================================
+    
+    Route::prefix('admin')->name('admin.')->middleware(['role:Admin'])->group(function () {
+        // Backup del sistema (solo Admin)
+        Route::get('/backup', function() {
+            return view('admin.backup');
+        })->name('backup');
     });
     
     // =====================================================================
