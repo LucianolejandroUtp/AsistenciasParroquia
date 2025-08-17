@@ -191,7 +191,7 @@
                     <i class="fe fe-users me-2"></i>Registro de Asistencias
                 </h5>
                 @if($session->canTakeAttendance())
-                <a href="#" class="btn btn-primary">
+                <a href="{{ route('attendances.register', ['session_id' => $session->id]) }}" class="btn btn-primary">
                     <i class="fe fe-edit me-1"></i>Registrar Asistencias
                 </a>
                 @endif
@@ -253,7 +253,7 @@
                             @endif
                         </p>
                         @if($session->canTakeAttendance())
-                        <a href="#" class="btn btn-primary">
+                        <a href="{{ route('attendances.register', ['session_id' => $session->id]) }}" class="btn btn-primary">
                             <i class="fe fe-plus me-1"></i>Registrar Primera Asistencia
                         </a>
                         @endif
