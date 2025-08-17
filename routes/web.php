@@ -135,7 +135,9 @@ Route::middleware(['auth.custom'])->group(function () {
         // Registro de asistencias (Admin y Profesor)
         Route::middleware(['role:Admin,Profesor'])->group(function () {
             Route::get('/register', [AttendanceController::class, 'register'])->name('register');
+            Route::post('/store', [AttendanceController::class, 'store'])->name('store');
             Route::get('/qr-scanner', [AttendanceController::class, 'qrScanner'])->name('qr-scanner');
+            Route::post('/qr-scan', [AttendanceController::class, 'processQrScan'])->name('qr-scan');
         });
         
         // Historial de asistencias (todos los usuarios autenticados)
