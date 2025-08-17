@@ -99,4 +99,130 @@ class DashboardController extends Controller
         
         return response()->json($stats);
     }
+
+    /**
+     * Dashboard específico para Administradores
+     */
+    public function adminDashboard()
+    {
+        // TODO: Implementar vista específica de admin
+        return view('dashboard.admin')->with([
+            'title' => 'Panel de Administración',
+            'message' => 'Vista de administrador - En desarrollo'
+        ]);
+    }
+
+    /**
+     * Dashboard específico para Catequistas/Profesores
+     */
+    public function profesorDashboard()
+    {
+        // TODO: Implementar vista específica de profesor
+        return view('dashboard.profesor')->with([
+            'title' => 'Panel de Catequista',
+            'message' => 'Vista de catequista - En desarrollo'
+        ]);
+    }
+
+    /**
+     * Dashboard específico para Personal de Apoyo
+     */
+    public function staffDashboard()
+    {
+        // TODO: Implementar vista específica de staff
+        return view('dashboard.staff')->with([
+            'title' => 'Panel de Personal',
+            'message' => 'Vista de personal de apoyo - En desarrollo'
+        ]);
+    }
+
+    /**
+     * Gestión de usuarios (Admin)
+     */
+    public function manageUsers()
+    {
+        // TODO: Implementar gestión de usuarios
+        return response()->json(['message' => 'Gestión de usuarios - En desarrollo']);
+    }
+
+    /**
+     * Configuración del sistema (Admin)
+     */
+    public function systemSettings()
+    {
+        // TODO: Implementar configuración del sistema
+        return response()->json(['message' => 'Configuración del sistema - En desarrollo']);
+    }
+
+    /**
+     * Gestión de asistencias (Profesor)
+     */
+    public function manageAttendance()
+    {
+        // TODO: Implementar gestión de asistencias
+        return response()->json(['message' => 'Gestión de asistencias - En desarrollo']);
+    }
+
+    /**
+     * Gestión de estudiantes (Profesor)
+     */
+    public function manageStudents()
+    {
+        // TODO: Implementar gestión de estudiantes
+        return response()->json(['message' => 'Gestión de estudiantes - En desarrollo']);
+    }
+
+    /**
+     * Visualización de reportes (Staff)
+     */
+    public function viewReports()
+    {
+        // TODO: Implementar visualización de reportes
+        return response()->json(['message' => 'Visualización de reportes - En desarrollo']);
+    }
+
+    /**
+     * Obtener datos para gráficos (API)
+     */
+    public function getChartData()
+    {
+        // TODO: Implementar datos para gráficos
+        return response()->json(['message' => 'Datos de gráficos - En desarrollo']);
+    }
+
+    /**
+     * Búsqueda de estudiantes (API)
+     */
+    public function searchStudents(Request $request)
+    {
+        // TODO: Implementar búsqueda de estudiantes
+        return response()->json(['message' => 'Búsqueda de estudiantes - En desarrollo']);
+    }
+
+    /**
+     * Obtener asistencias recientes (API)
+     */
+    public function getRecentAttendance()
+    {
+        // TODO: Implementar asistencias recientes
+        return response()->json(['message' => 'Asistencias recientes - En desarrollo']);
+    }
+
+    /**
+     * Estadísticas de usuarios (API Admin)
+     */
+    public function getUserStats()
+    {
+        // TODO: Implementar estadísticas de usuarios
+        return response()->json(['message' => 'Estadísticas de usuarios - En desarrollo']);
+    }
+
+    /**
+     * Estado del sistema (API Admin)
+     */
+    public function getSystemStatus()
+    {
+        // TODO: Implementar estado del sistema
+        return response()->json(['message' => 'Estado del sistema - En desarrollo']);
+    }
 }
