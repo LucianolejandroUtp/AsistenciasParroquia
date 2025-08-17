@@ -72,11 +72,11 @@
                             <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                 Cerrar Sesión
                             </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
                                 @csrf
                             </form>
                         @else
-                            <a class="dropdown-item" href="{{ route('login') }}">Iniciar Sesión</a>
+                            <a class="dropdown-item" href="{{ route('auth.login') }}">Iniciar Sesión</a>
                         @endauth
                     </div>
                 </li>
