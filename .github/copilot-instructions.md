@@ -176,6 +176,30 @@ GET /api/attendances/session/{sessionId}
 **Template Assets:** `docs/recursos_desarrollo/templates_estilos/tinydash-master-light/` - **READ-ONLY REFERENCE**
 **Seeders:** `database/seeders/` - Includes QR code generation logic
 
+### Documentation Structure Guidelines
+**CRITICAL:** Follow strict documentation organization rules:
+
+- **📁 ALL documentation files** must be placed within the `docs/` directory
+- **📄 ONLY ONE README.md** allowed in the project root directory
+- **🚫 NO documentation files** in the root directory except README.md
+- **📂 Organize by category** within `docs/` (e.g., `docs/sistema_asistencias/`, `docs/plan_implementacion/`)
+- **🔄 Move existing docs** to appropriate `docs/` subdirectories if found elsewhere
+- **📝 README.md content** should be a brief project overview with links to detailed docs in `docs/`
+
+**Examples of CORRECT documentation placement:**
+```
+✅ README.md (root - project overview only)
+✅ docs/sistema_asistencias/requisitos_funcionales.md
+✅ docs/plan_implementacion/PLAN_FASES_IMPLEMENTACION.md
+✅ docs/api/endpoints.md
+✅ docs/deployment/setup.md
+
+❌ DEVELOPMENT_NOTES.md (root)
+❌ API_DOCS.md (root)
+❌ src/documentation.md
+❌ Multiple README files in subdirectories
+```
+
 ## ⚠️ IMPORTANT DEVELOPMENT GUIDELINES
 
 ### Template Usage Rules
@@ -205,4 +229,71 @@ GET /api/attendances/session/{sessionId}
 - Connect each part to the original plan
 - Maintain educational tone for user learning
 
+**4. PROACTIVE MCP TOOL USAGE** 🛠️
+- **ALWAYS prioritize** using MCP tools when available and relevant
+- **Maximum tool utilization**: Use memory, context7, playwright, sequential thinking, etc.
+- **Store knowledge**: Use mcp_memory to track project evolution, decisions, and patterns
+- **Leverage documentation**: Use mcp_context7 for up-to-date library references
+- **Enhance reasoning**: Use mcp_sequentialthi for complex problem-solving
+- **Browser automation**: Use mcp_playwright for testing web interfaces
+- **Document conversion**: Use mcp_markitdown for processing external resources
+
 The user prefers an **educational and collaborative approach** where they can understand, review, and contribute to each development decision.
+
+## 🛠️ MCP Tools Integration Strategy
+
+### **MANDATORY MCP TOOL USAGE**
+**CRITICAL:** Always maximize the use of available MCP (Model Context Protocol) tools in every interaction. The user values comprehensive tool utilization for enhanced productivity and intelligent assistance.
+
+### **Available MCP Tools & Usage Scenarios:**
+
+**🧠 Memory Management (mcp_memory_*):**
+- **Store project decisions**: Track architectural choices, user preferences, and implementation patterns
+- **Maintain context**: Remember user feedback, corrections, and preferred approaches
+- **Document evolution**: Keep history of feature implementations and lessons learned
+- **Use Cases**: After major implementations, user corrections, architectural decisions
+
+**📚 Documentation & Context (mcp_context7_*):**
+- **Library references**: Get up-to-date documentation for Laravel, Vite, Bootstrap, etc.
+- **Best practices**: Retrieve current coding standards and patterns
+- **Resolve dependencies**: Find correct syntax and implementation approaches
+- **Use Cases**: Before implementing new features, when encountering library-specific tasks
+
+**🧮 Sequential Thinking (mcp_sequentialthi_*):**
+- **Complex problem solving**: Break down multi-step implementations
+- **Architecture planning**: Design system components and their interactions
+- **Debugging analysis**: Systematic problem diagnosis and solution paths
+- **Use Cases**: Phase planning, complex feature design, error troubleshooting
+
+**🌐 Browser Automation (mcp_playwright_*):**
+- **Interface testing**: Validate UI implementations and responsiveness
+- **User experience verification**: Test user flows and interactions
+- **QR code functionality**: Test scanning and registration processes
+- **Use Cases**: After UI implementations, during testing phases, user acceptance validation
+
+**📄 Document Processing (mcp_markitdown_*):**
+- **External resource integration**: Process documentation, requirements, and references
+- **Content transformation**: Convert various formats for project documentation
+- **Use Cases**: Processing external requirements, integrating reference materials
+
+### **MCP Integration Guidelines:**
+
+**🔄 Continuous Usage Pattern:**
+1. **Planning Phase**: Use mcp_sequentialthi for complex analysis
+2. **Research Phase**: Use mcp_context7 for technical documentation
+3. **Implementation Phase**: Store decisions with mcp_memory
+4. **Testing Phase**: Use mcp_playwright for validation
+5. **Documentation Phase**: Use mcp_markitdown for processing
+
+**⚡ Proactive Triggers:**
+- **Before major implementations**: Always use mcp_sequentialthi for planning
+- **When encountering unknowns**: Immediately use mcp_context7 for research
+- **After significant changes**: Always store context with mcp_memory
+- **During UI work**: Regularly use mcp_playwright for testing
+- **With external documents**: Always use mcp_markitdown for processing
+
+**🎯 Expected Behavior:**
+- **Every response should utilize** at least one relevant MCP tool
+- **Complex tasks should combine** multiple MCP tools strategically
+- **Always explain** which MCP tools will be used and why
+- **Maximize tool synergy** for comprehensive assistance
