@@ -6,211 +6,331 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
 use App\Models\Student;
+use App\Models\Group;
+use App\Http\Requests\AttendanceRequest;
+use App\Http\Requests\QrScanRequest;
+use App\Http\Requests\IndividualAttendanceRequest;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
     /**
      * Mostrar interfaz de registro de asistencias.
      */
-    public function register()
+    public function register(Request $request)
     {
-        // Datos mock para registro de asistencias
-        $mockSession = (object) [
-            'id' => 1,
-            'title' => 'Sesión de Catequesis - Los Sacramentos',
-            'date' => '2025-08-17',
-            'time' => '10:00',
-            'groups' => 'A,B',
-            'status' => 'active'
-        ];
+        // Obtener sesiones activas para el selector
+        $activeSessions = AttendanceSession::where('estado', 'ACTIVO')
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->get();
 
-        $mockStudents = [
-            (object) [
-                'id' => 1,
-                'full_name' => 'Antony Alexander Alférez Vilchez',
-                'qr_code' => 'A-ANTONY-ALF-VILCH',
-                'group_name' => 'Grupo A',
-                'order_number' => 1,
-                'attendance_status' => null, // No marcado aún
-                'last_attendance' => '2025-08-15'
-            ],
-            (object) [
-                'id' => 2,
-                'full_name' => 'María Elena González Pérez',
-                'qr_code' => 'A-MARIA-GON-PER',
-                'group_name' => 'Grupo A',
-                'order_number' => 2,
-                'attendance_status' => 'present',
-                'attendance_time' => '10:05'
-            ],
-            (object) [
-                'id' => 3,
-                'full_name' => 'Carlos Eduardo Ramírez Silva',
-                'qr_code' => 'B-CARLOS-RAM-SIL',
-                'group_name' => 'Grupo B',
-                'order_number' => 1,
-                'attendance_status' => 'late',
-                'attendance_time' => '10:15'
-            ],
-            (object) [
-                'id' => 4,
-                'full_name' => 'Ana Sofía Mendoza Castro',
-                'qr_code' => 'B-ANA-MEN-CAS',
-                'group_name' => 'Grupo B',
-                'order_number' => 2,
-                'attendance_status' => 'present',
-                'attendance_time' => '10:02'
-            ]
-        ];
+        // Obtener sesión seleccionada o la más reciente
+        $sessionId = $request->get('session_id');
+        $selectedSession = null;
+        
+        if ($sessionId) {
+            $selectedSession = AttendanceSession::with(['attendances.student'])
+                ->where('id', $sessionId)
+                ->where('estado', 'ACTIVO')
+                ->first();
+        } else {
+            $selectedSession = $activeSessions->first();
+        }
 
+        $students = collect();
         $stats = (object) [
-            'total_students' => 78,
-            'registered_today' => 45,
-            'present_count' => 42,
-            'late_count' => 3,
-            'absent_count' => 33
+            'total_students' => 0,
+            'registered_today' => 0,
+            'present_count' => 0,
+            'late_count' => 0,
+            'absent_count' => 0
         ];
 
-        return view('attendances.register', compact('mockSession', 'mockStudents', 'stats'));
+        if ($selectedSession) {
+            // Obtener todos los estudiantes activos (ya que no hay restricción por grupos en esta sesión)
+            $students = Student::with(['group', 'attendances' => function($query) use ($selectedSession) {
+                    $query->where('attendance_session_id', $selectedSession->id);
+                }])
+                ->where('estado', 'ACTIVO')
+                ->orderBy('group_id')
+                ->orderBy('order_number')
+                ->get()
+                ->map(function($student) use ($selectedSession) {
+                    $attendance = $student->attendances->first();
+                    
+                    return (object) [
+                        'id' => $student->id,
+                        'full_name' => $student->full_name,
+                        'qr_code' => $student->qr_code,
+                        'group_name' => $student->group->name,
+                        'order_number' => $student->order_number,
+                        'attendance_status' => $attendance?->status,
+                        'attendance_time' => $attendance?->created_at?->format('H:i'),
+                        'last_attendance' => $student->attendances()
+                            ->where('attendance_session_id', '!=', $selectedSession->id)
+                            ->latest('created_at')
+                            ->first()?->created_at?->format('Y-m-d')
+                    ];
+                });
+
+            // Calcular estadísticas reales
+            $totalStudents = $students->count();
+            $presentCount = $students->where('attendance_status', 'present')->count();
+            $lateCount = $students->where('attendance_status', 'late')->count();
+            $registeredToday = $presentCount + $lateCount;
+            $absentCount = $totalStudents - $registeredToday;
+
+            $stats = (object) [
+                'total_students' => $totalStudents,
+                'registered_today' => $registeredToday,
+                'present_count' => $presentCount,
+                'late_count' => $lateCount,
+                'absent_count' => $absentCount
+            ];
+        }
+
+        return view('attendances.register', compact('activeSessions', 'selectedSession', 'students', 'stats'));
+    }
+
+    /**
+     * Guardar registro de asistencia individual.
+     */
+    public function store(IndividualAttendanceRequest $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $student = Student::findOrFail($request->student_id);
+            $session = AttendanceSession::findOrFail($request->attendance_session_id);
+
+            // Marcar asistencia usando el método del modelo
+            $attendance = Attendance::markAttendance(
+                $session->id,
+                $student->id,
+                $request->status,
+                $request->notes
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Asistencia registrada para {$student->full_name}",
+                'data' => [
+                    'attendance_id' => $attendance->id,
+                    'student_name' => $student->full_name,
+                    'status' => $attendance->status_display,
+                    'marked_at' => $attendance->created_at->format('H:i'),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar asistencia: ' . $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
      * Mostrar interfaz de escaneo QR.
      */
-    public function qrScanner()
+    public function qrScanner(Request $request)
     {
-        // Datos mock para el escáner QR
-        $mockSession = (object) [
-            'id' => 1,
-            'title' => 'Sesión de Catequesis - Los Sacramentos',
-            'date' => '2025-08-17',
-            'time' => '10:00',
-            'status' => 'active'
-        ];
+        // Obtener sesiones activas
+        $activeSessions = AttendanceSession::where('estado', 'ACTIVO')
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->get();
 
-        $recentScans = [
-            (object) [
-                'student_name' => 'María Elena González Pérez',
-                'qr_code' => 'A-MARIA-GON-PER',
-                'scan_time' => '10:05',
-                'status' => 'present',
-                'group' => 'A'
-            ],
-            (object) [
-                'student_name' => 'Ana Sofía Mendoza Castro',
-                'qr_code' => 'B-ANA-MEN-CAS',
-                'scan_time' => '10:02',
-                'status' => 'present',
-                'group' => 'B'
-            ],
-            (object) [
-                'student_name' => 'Carlos Eduardo Ramírez Silva',
-                'qr_code' => 'B-CARLOS-RAM-SIL',
-                'scan_time' => '10:15',
-                'status' => 'late',
-                'group' => 'B'
-            ]
-        ];
+        // Obtener sesión seleccionada
+        $sessionId = $request->get('session_id');
+        $selectedSession = null;
+        
+        if ($sessionId) {
+            $selectedSession = AttendanceSession::findOrFail($sessionId);
+        } else {
+            $selectedSession = $activeSessions->first();
+        }
 
+        $recentScans = collect();
         $scanStats = (object) [
-            'total_scans' => 45,
-            'successful_scans' => 42,
-            'error_scans' => 3,
-            'scan_rate' => 93
+            'total_scans' => 0,
+            'successful_scans' => 0,
+            'error_scans' => 0,
+            'scan_rate' => 0
         ];
 
-        return view('attendances.qr-scanner', compact('mockSession', 'recentScans', 'scanStats'));
+        if ($selectedSession) {
+            // Obtener escaneos recientes de la sesión (últimos 10)
+            $recentScans = Attendance::with(['student.group'])
+                ->where('attendance_session_id', $selectedSession->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function($attendance) {
+                    return (object) [
+                        'student_name' => $attendance->student->full_name,
+                        'qr_code' => $attendance->student->qr_code,
+                        'scan_time' => $attendance->created_at->format('H:i'),
+                        'status' => $attendance->status,
+                        'group' => $attendance->student->group->name
+                    ];
+                });
+
+            // Estadísticas de escaneo (asumiendo que todos los registros son exitosos)
+            $totalScans = Attendance::where('attendance_session_id', $selectedSession->id)->count();
+            $scanStats = (object) [
+                'total_scans' => $totalScans,
+                'successful_scans' => $totalScans,
+                'error_scans' => 0,
+                'scan_rate' => $totalScans > 0 ? 100 : 0
+            ];
+        }
+
+        return view('attendances.qr-scanner', compact('activeSessions', 'selectedSession', 'recentScans', 'scanStats'));
+    }
+
+    /**
+     * Procesar escaneo de código QR.
+     */
+    public function processQrScan(QrScanRequest $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Buscar estudiante por código QR
+            $student = Student::where('qr_code', $request->qr_code)
+                ->where('estado', 'ACTIVO')
+                ->first();
+
+            if (!$student) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Código QR no válido o estudiante no encontrado'
+                ], 404);
+            }
+
+            $session = AttendanceSession::findOrFail($request->attendance_session_id);
+
+            // En este esquema, todas las sesiones permiten todos los estudiantes
+            // No hay restricción por grupos específicos
+
+            // Marcar asistencia (el status se determina automáticamente en QrScanRequest)
+            $attendance = Attendance::markAttendance(
+                $session->id,
+                $student->id,
+                $request->status,
+                $request->notes
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "¡Asistencia registrada exitosamente!",
+                'data' => [
+                    'student_name' => $student->full_name,
+                    'group' => $student->group->name,
+                    'status' => $attendance->status_display,
+                    'marked_at' => $attendance->created_at->format('H:i'),
+                    'qr_code' => $student->qr_code
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar código QR: ' . $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
      * Mostrar historial de asistencias.
      */
-    public function history()
+    public function history(Request $request)
     {
-        // Mock data para historial de sesiones
-        $mockSessions = collect([
-            (object)[
-                'id' => 1,
-                'title' => 'Sesión 1: Los Sacramentos',
-                'date' => '2025-08-14',
-                'time' => '16:00',
-                'status' => 'completed',
-                'attendance_percentage' => 92,
-                'present_count' => 72,
-                'late_count' => 3,
-                'absent_count' => 3,
-                'total_students' => 78,
-            ],
-            (object)[
-                'id' => 2,
-                'title' => 'Sesión 2: La Eucaristía',
-                'date' => '2025-08-07',
-                'time' => '16:00',
-                'status' => 'completed',
-                'attendance_percentage' => 85,
-                'present_count' => 66,
-                'late_count' => 4,
-                'absent_count' => 8,
-                'total_students' => 78,
-            ],
-            (object)[
-                'id' => 3,
-                'title' => 'Sesión 3: La Oración del Señor',
-                'date' => '2025-07-31',
-                'time' => '16:00',
-                'status' => 'completed',
-                'attendance_percentage' => 78,
-                'present_count' => 61,
-                'late_count' => 5,
-                'absent_count' => 12,
-                'total_students' => 78,
-            ],
-            (object)[
-                'id' => 4,
-                'title' => 'Sesión 4: El Amor de Dios',
-                'date' => '2025-07-24',
-                'time' => '16:00',
-                'status' => 'completed',
-                'attendance_percentage' => 88,
-                'present_count' => 69,
-                'late_count' => 2,
-                'absent_count' => 7,
-                'total_students' => 78,
-            ],
-            (object)[
-                'id' => 5,
-                'title' => 'Sesión 5: Los Mandamientos',
-                'date' => '2025-07-17',
-                'time' => '16:00',
-                'status' => 'completed',
-                'attendance_percentage' => 94,
-                'present_count' => 73,
-                'late_count' => 2,
-                'absent_count' => 3,
-                'total_students' => 78,
-            ],
-            (object)[
-                'id' => 6,
-                'title' => 'Sesión 6: La Reconciliación',
-                'date' => '2025-07-10',
-                'time' => '16:00',
-                'status' => 'completed',
-                'attendance_percentage' => 58,
-                'present_count' => 45,
-                'late_count' => 8,
-                'absent_count' => 25,
-                'total_students' => 78,
-            ],
-        ]);
+        // Filtros
+        $groupId = $request->get('group_id');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
 
-        // Mock estadísticas del historial
+        // Query para sesiones con asistencias
+        $sessionsQuery = AttendanceSession::with(['attendances.student'])
+            ->where('estado', 'ACTIVO')
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc');
+
+        // Aplicar filtros
+        if ($groupId) {
+            $sessionsQuery->whereHas('attendances.student', function($query) use ($groupId) {
+                $query->where('group_id', $groupId);
+            });
+        }
+
+        if ($startDate) {
+            $sessionsQuery->where('date', '>=', Carbon::parse($startDate));
+        }
+
+        if ($endDate) {
+            $sessionsQuery->where('date', '<=', Carbon::parse($endDate));
+        }
+
+        $sessions = $sessionsQuery->paginate(10)->through(function($session) {
+            $summary = $session->getSessionSummary();
+            
+            return (object)[
+                'id' => $session->id,
+                'title' => $session->title,
+                'date' => $session->date->format('Y-m-d'),
+                'time' => $session->time ? $session->time->format('H:i') : '00:00',
+                'status' => 'completed', // Todas las sesiones se consideran completadas
+                'attendance_percentage' => $summary['attendance_percentage'],
+                'present_count' => $summary['present_count'],
+                'late_count' => $summary['late_count'],
+                'absent_count' => $summary['absent_count'],
+                'total_students' => $summary['total_students'],
+            ];
+        });
+
+        // Estadísticas generales del historial
+        $allSessions = AttendanceSession::with(['attendances'])
+            ->where('estado', 'ACTIVO')
+            ->get();
+
+        $totalSessions = $allSessions->count();
+        $averageAttendance = $allSessions->isNotEmpty() 
+            ? round($allSessions->avg(function($session) {
+                $summary = $session->getSessionSummary();
+                return $summary['attendance_percentage'];
+            })) 
+            : 0;
+
+        $bestSession = $allSessions->sortByDesc(function($session) {
+            return $session->getSessionSummary()['attendance_percentage'];
+        })->first();
+
+        $lowestSession = $allSessions->sortBy(function($session) {
+            return $session->getSessionSummary()['attendance_percentage'];
+        })->first();
+
         $historyStats = (object)[
-            'total_sessions' => 15,
-            'average_attendance' => 82,
-            'best_session' => 'Sesión 5: Los Mandamientos (94%)',
-            'lowest_session' => 'Sesión 6: La Reconciliación (58%)',
+            'total_sessions' => $totalSessions,
+            'average_attendance' => $averageAttendance,
+            'best_session' => $bestSession ? $bestSession->title . " ({$bestSession->getSessionSummary()['attendance_percentage']}%)" : 'N/A',
+            'lowest_session' => $lowestSession ? $lowestSession->title . " ({$lowestSession->getSessionSummary()['attendance_percentage']}%)" : 'N/A',
         ];
 
-        return view('attendances.history', compact('mockSessions', 'historyStats'));
+        // Obtener grupos para el filtro
+        $groups = Group::where('estado', 'ACTIVO')->orderBy('name')->get();
+
+        return view('attendances.history', compact('sessions', 'historyStats', 'groups', 'groupId', 'startDate', 'endDate'));
     }
 }
