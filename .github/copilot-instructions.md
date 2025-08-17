@@ -59,11 +59,16 @@ groups → students → attendances
 
 ### Development Workflow
 
-**Database Management:**
+**Database Management (Early Development Phase):**
 ```bash
 php artisan migrate           # Run migrations (custom timestamp format)
 php artisan db:seed          # Populate with 78 students + demo users
 ```
+
+**Migration Guidelines:**
+- **Early Development Phase**: Edit existing migrations directly since no users are active
+- **Production/Maintenance Phase**: Create new migrations for any database changes
+- **Current State**: System in development - direct migration edits are preferred over new migration files
 
 **Seeders Run Order (defined in DatabaseSeeder.php):**
 1. `UserTypeSeeder` → User types (Admin, Profesor, Staff)
