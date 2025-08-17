@@ -65,3 +65,5 @@ Homestead.yaml
 
 # === TEMPLATES (READ-ONLY REFERENCES) ===
 /docs/recursos_desarrollo/templates_estilos/
+
+.playwright-mcp/
