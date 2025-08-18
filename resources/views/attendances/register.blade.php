@@ -100,11 +100,13 @@
 @endsection
 
 @section('content')
-<!-- Selector de Sesión -->
-@if($activeSessions->count() > 1)
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="card">
+@if($selectedSession)
+<!-- Selector de Sesión y Información de Sesión en línea -->
+<div class="row mb-4">
+    @if($activeSessions->count() > 1)
+    <!-- Selector de Sesión (mitad izquierda) -->
+    <div class="col-md-6">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
@@ -125,14 +127,11 @@
             </div>
         </div>
     </div>
-</div>
-@endif
-
-@if($selectedSession)
-<!-- Información de la Sesión Activa -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card bg-primary text-white">
+    @endif
+    
+    <!-- Información de la Sesión Activa (mitad derecha o ancho completo si solo hay una sesión) -->
+    <div class="col-md-{{ $activeSessions->count() > 1 ? '6' : '12' }}">
+        <div class="card bg-primary text-white h-100">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
@@ -160,6 +159,8 @@
         </div>
     </div>
 </div>
+
+<!-- Lista de Estudiantes -->
 
 <!-- Estadísticas de Asistencia -->
 <div class="row mb-4">
@@ -369,9 +370,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
 @else
 <!-- Sin sesiones activas -->
 <div class="row">
