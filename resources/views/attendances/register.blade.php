@@ -270,11 +270,6 @@
                 <div class="row align-items-center">
                     <div class="col">
                         <div class="media align-items-center">
-                            <div class="avatar avatar-sm mr-3">
-                                <span class="avatar-title rounded-circle bg-soft-{{ str_contains($student->group_name, 'A') ? 'primary' : 'info' }} text-{{ str_contains($student->group_name, 'A') ? 'primary' : 'info' }}">
-                                    {{ substr($student->full_name, 0, 1) }}
-                                </span>
-                            </div>
                             <div class="media-body">
                                 <h6 class="mb-0">{{ $student->full_name }}</h6>
                                 <small class="text-muted">
