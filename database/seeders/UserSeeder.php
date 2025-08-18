@@ -16,33 +16,63 @@ class UserSeeder extends Seeder
     {
         // Obtener IDs de user_types
         $adminType = DB::table('user_types')->where('name', 'Admin')->first();
-        $profesorType = DB::table('user_types')->where('name', 'Profesor')->first();
-        $staffType = DB::table('user_types')->where('name', 'Staff')->first();
+        $profesorType = DB::table('user_types')->where('name', 'Catequista')->first();
+        $staffType = DB::table('user_types')->where('name', 'Apoyo')->first();
 
         $users = [
             [
                 'user_type_id' => $adminType->id,
                 'name' => 'Administrador Principal',
-                'email' => 'admin@primcomunion.edu',
+                'email' => 'admin@admin.com',
                 'password' => Hash::make('admin123'),
             ],
             [
-                'user_type_id' => $profesorType->id,
-                'name' => 'Prof. María González',
-                'email' => 'maria.gonzalez@primcomunion.edu',
-                'password' => Hash::make('prof123'),
-            ],
-            [
-                'user_type_id' => $profesorType->id,
-                'name' => 'Prof. Juan Pérez',
-                'email' => 'juan.perez@primcomunion.edu', 
-                'password' => Hash::make('prof123'),
+                'user_type_id' => $adminType->id,
+                'name' => 'Silvia Caira',
+                'email' => 'silvia.caira@pcbeata.com',
+                'password' => Hash::make('12345678'),
             ],
             [
                 'user_type_id' => $staffType->id,
-                'name' => 'Ana Rodríguez',
-                'email' => 'ana.rodriguez@primcomunion.edu',
-                'password' => Hash::make('staff123'),
+                'name' => 'Apoyo01',
+                'email' => 'apoyo01@apoyo.com',
+                'password' => Hash::make('apoyo123'),
+            ],
+            [
+                'user_type_id' => $staffType->id,
+                'name' => 'Apoyo02',
+                'email' => 'apoyo02@apoyo.com',
+                'password' => Hash::make('apoyo123'),
+            ],
+            [
+                'user_type_id' => $profesorType->id,
+                'name' => 'Angelica Caira',
+                'email' => 'angelica.caira@pcbeata.com',
+                'password' => Hash::make('12345678'),
+            ],
+            [
+                'user_type_id' => $profesorType->id,
+                'name' => 'Sandra Valdivia',
+                'email' => 'sandra.valdivia@pcbeata.com',
+                'password' => Hash::make('12345678'),
+            ],
+            [
+                'user_type_id' => $profesorType->id,
+                'name' => 'Fabiola Valdivia',
+                'email' => 'fabiola.valdivia@pcbeata.com',
+                'password' => Hash::make('12345678'),
+            ],
+            [
+                'user_type_id' => $profesorType->id,
+                'name' => 'Flavia Valdivia',
+                'email' => 'flavia.valdivia@pcbeata.com',
+                'password' => Hash::make('12345678'),
+            ],
+            [
+                'user_type_id' => $profesorType->id,
+                'name' => 'Jhean Pierr Torres',
+                'email' => 'jhean.torres@pcbeata.com',
+                'password' => Hash::make('12345678'),
             ]
         ];
 

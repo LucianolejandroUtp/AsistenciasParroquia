@@ -19,12 +19,12 @@ class UserTypeSeeder extends Seeder
                 'description' => 'Administrador del sistema con acceso completo'
             ],
             [
-                'name' => 'Profesor',
-                'description' => 'Profesor responsable de grupos de estudiantes'
+                'name' => 'Catequista',
+                'description' => 'Catequista responsable de grupos de estudiantes'
             ],
             [
-                'name' => 'Staff',
-                'description' => 'Personal de apoyo con acceso limitado'
+                'name' => 'Apoyo',
+                'description' => 'Personal de apoyo'
             ]
         ];
 
