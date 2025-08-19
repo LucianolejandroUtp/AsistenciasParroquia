@@ -133,7 +133,6 @@
                         <th>Orden</th>
                         <th>Nombre Completo</th>
                         <th>Grupo</th>
-                        <th>Código Estudiante</th>
                         <th>Asistencia</th>
                         <th>Estado</th>
                         <th>Registro</th>
@@ -163,12 +162,6 @@
                             @endif
                         </td>
                         <td>
-                            <code class="small">{{ $student->student_code }}</code>
-                            @if($student->qr_code)
-                                <br><small class="text-muted">QR: {{ $student->qr_code }}</small>
-                            @endif
-                        </td>
-                        <td>
                             <div class="d-flex align-items-center">
                                 <div class="progress flex-fill mr-2" style="height: 6px;">
                                     <div class="progress-bar bg-{{ $student->attendance_percentage >= 80 ? 'success' : ($student->attendance_percentage >= 60 ? 'warning' : 'danger') }}" 
@@ -190,25 +183,19 @@
                             @endif
                         </td>
                         <td class="text-right">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-white" data-toggle="dropdown">
-                                    <span class="fe fe-more-vertical fe-12"></span>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Acciones">
+                                <button type="button" class="btn btn-outline-primary" title="Ver Detalles">
+                                    <span class="fe fe-eye fe-12"></span>
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="#">
-                                        <span class="fe fe-eye fe-12 mr-2"></span>Ver Detalles
-                                    </a>
-                                    <a class="dropdown-item" href="#">
-                                        <span class="fe fe-edit-2 fe-12 mr-2"></span>Editar
-                                    </a>
-                                    <a class="dropdown-item" href="#">
-                                        <span class="fe fe-qr-code fe-12 mr-2"></span>Ver QR
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#">
-                                        <span class="fe fe-bar-chart-2 fe-12 mr-2"></span>Historial
-                                    </a>
-                                </div>
+                                <button type="button" class="btn btn-outline-secondary" title="Editar">
+                                    <span class="fe fe-edit-2 fe-12"></span>
+                                </button>
+                                <button type="button" class="btn btn-outline-info" title="Ver QR">
+                                    <span class="fe fe-qr-code fe-12"></span>
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" title="Historial">
+                                    <span class="fe fe-bar-chart-2 fe-12"></span>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -278,15 +265,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 "width": "50px"
             },
             {
-                "targets": [4], // Columna Asistencia
+                "targets": [3], // Columna Asistencia
                 "orderable": true,
                 "type": "num"
             },
             {
-                "targets": [7], // Columna Acciones
+                "targets": [6], // Columna Acciones
                 "orderable": false,
                 "searchable": false,
-                "width": "100px"
+                "width": "160px"
             }
         ],
         "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
@@ -309,8 +296,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return true;
             }
 
-            // Extraer porcentaje de asistencia de la columna 4 (índice 4)
-            var attendanceText = data[4] || '';
+            // Extraer porcentaje de asistencia de la columna 3 (índice 3)
+            var attendanceText = data[3] || '';
             var percentageMatch = attendanceText.match(/(\d+)%/);
             
             if (!percentageMatch) {
@@ -340,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $('#statusFilter').on('change', function() {
         var selectedStatus = this.value;
-        table.column(5).search(selectedStatus).draw(); // Columna 5 es "Estado"
+        table.column(4).search(selectedStatus).draw(); // Columna 4 es "Estado"
     });
 
     $('#attendanceFilter').on('change', function() {
