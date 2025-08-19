@@ -122,8 +122,6 @@ Route::middleware(['auth.custom'])->group(function () {
     Route::prefix('students')->name('students.')->group(function () {
         // Vistas principales de estudiantes (todos los usuarios autenticados)
         Route::get('/', [StudentController::class, 'index'])->name('index');
-        Route::get('/group-a', [StudentController::class, 'groupA'])->name('group-a');
-        Route::get('/group-b', [StudentController::class, 'groupB'])->name('group-b');
         Route::get('/qr-codes', [StudentController::class, 'qrCodes'])->name('qr-codes');
     });
     
