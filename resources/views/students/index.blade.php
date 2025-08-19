@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
             {
                 "targets": [0], // Columna Orden
                 "type": "num",
-                "width": "80px"
+                "width": "50px"
             },
             {
                 "targets": [4], // Columna Asistencia
