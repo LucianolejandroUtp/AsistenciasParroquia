@@ -132,6 +132,14 @@ class Student extends Model
     }
 
     /**
+     * Get the QR code for this student (accessor for student_code).
+     */
+    public function getQrCodeAttribute(): string
+    {
+        return $this->student_code ?? '';
+    }
+
+    /**
      * Generate QR code for this student.
      * Format: {GROUP}-{FIRSTNAME}-{PATERNAL_SYLLABLE}-{MATERNAL_SYLLABLE}
      */
