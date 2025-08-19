@@ -4,6 +4,10 @@
 
 @section('page-title', 'Lista Completa de Estudiantes')
 
+@section('additional-css')
+    <link rel="stylesheet" href="{{ asset('tinydash/css/dataTables.bootstrap4.css') }}">
+@endsection
+
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
     <li class="breadcrumb-item active">Estudiantes</li>
@@ -75,42 +79,15 @@
     </div>
 </div>
 
-<!-- Filtros y Acciones -->
-<div class="row mb-3">
-    <div class="col-md-6">
-        <div class="form-group">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar estudiante...">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button">
-                        <span class="fe fe-search"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <select class="form-control">
-            <option value="">Todos los grupos</option>
-            <option value="1">Grupo A</option>
-            <option value="2">Grupo B</option>
-        </select>
-    </div>
-    <div class="col-md-3">
-        <select class="form-control">
-            <option value="">Estado</option>
-            <option value="ACTIVO">Activos</option>
-            <option value="INACTIVO">Inactivos</option>
-        </select>
-    </div>
-</div>
-
-<!-- Tabla de Estudiantes -->
+<!-- Tabla de Estudiantes con DataTables -->
 <div class="card">
     <div class="card-header">
         <div class="row align-items-center">
             <div class="col">
                 <h4 class="card-header-title">Lista de Estudiantes de Primera Comunión</h4>
+                <p class="card-text small text-muted mb-0">
+                    Gestiona todos los estudiantes registrados con funciones avanzadas de búsqueda, filtrado y ordenamiento.
+                </p>
             </div>
             <div class="col-auto">
                 <button class="btn btn-sm btn-primary" type="button">
@@ -124,23 +101,24 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-borderless table-hover">
+            <table class="table table-hover datatables" id="studentsDataTable">
                 <thead>
                     <tr>
                         <th>Orden</th>
                         <th>Nombre Completo</th>
                         <th>Grupo</th>
-                        <th>Código QR</th>
+                        <th>Código Estudiante</th>
                         <th>Asistencia</th>
                         <th>Estado</th>
+                        <th>Registro</th>
                         <th class="text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($mockStudents as $student)
+                    @foreach($students as $student)
                     <tr>
                         <td>
-                            <span class="badge badge-soft-primary">{{ $student->order_number }}</span>
+                            <span class="badge badge-soft-primary">{{ $student->order_number ?? '-' }}</span>
                         </td>
                         <td>
                             <div class="media align-items-center">
@@ -151,16 +129,25 @@
                                 </div>
                                 <div class="media-body">
                                     <strong>{{ $student->full_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ $student->names }} {{ $student->paternal_surname }}</small>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="badge badge-{{ $student->group_id == 1 ? 'primary' : 'info' }}">
-                                {{ $student->group_name }}
-                            </span>
+                            @if($student->group_name !== 'Sin Grupo')
+                                <span class="badge badge-{{ strpos($student->group_name, 'A') !== false ? 'primary' : 'info' }}">
+                                    {{ $student->group_name }}
+                                </span>
+                            @else
+                                <span class="badge badge-secondary">Sin Grupo</span>
+                            @endif
                         </td>
                         <td>
-                            <code class="small">{{ $student->qr_code }}</code>
+                            <code class="small">{{ $student->student_code }}</code>
+                            @if($student->qr_code)
+                                <br><small class="text-muted">QR: {{ $student->qr_code }}</small>
+                            @endif
                         </td>
                         <td>
                             <div class="d-flex align-items-center">
@@ -176,6 +163,12 @@
                             <span class="badge badge-{{ $student->status == 'ACTIVO' ? 'success' : 'secondary' }}">
                                 {{ $student->status }}
                             </span>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ $student->created_at }}</small>
+                            @if($student->updated_at !== $student->created_at)
+                                <br><small class="text-muted">Mod: {{ $student->updated_at }}</small>
+                            @endif
                         </td>
                         <td class="text-right">
                             <div class="dropdown">
@@ -204,36 +197,6 @@
                 </tbody>
             </table>
         </div>
-        
-        <!-- Paginación Mock -->
-        <div class="row mt-4">
-            <div class="col-sm-12 col-md-5">
-                <div class="dataTables_info">
-                    Mostrando 1 a 4 de 78 estudiantes
-                </div>
-            </div>
-            <div class="col-sm-12 col-md-7">
-                <div class="dataTables_paginate">
-                    <ul class="pagination">
-                        <li class="paginate_button page-item previous disabled">
-                            <a class="page-link" href="#">Anterior</a>
-                        </li>
-                        <li class="paginate_button page-item active">
-                            <a class="page-link" href="#">1</a>
-                        </li>
-                        <li class="paginate_button page-item">
-                            <a class="page-link" href="#">2</a>
-                        </li>
-                        <li class="paginate_button page-item">
-                            <a class="page-link" href="#">3</a>
-                        </li>
-                        <li class="paginate_button page-item next">
-                            <a class="page-link" href="#">Siguiente</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -259,20 +222,55 @@
 @endsection
 
 @section('additional-js')
+<script src="{{ asset('tinydash/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('tinydash/js/dataTables.bootstrap4.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Funcionalidad de búsqueda (demo)
-    const searchInput = document.querySelector('input[placeholder="Buscar estudiante..."]');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            console.log('Buscando:', this.value);
-        });
-    }
-    
-    // Tooltips
+    // Inicializar DataTables
+    $('#studentsDataTable').DataTable({
+        autoWidth: true,
+        responsive: true,
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json"
+        },
+        "lengthMenu": [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "Todos"]
+        ],
+        "pageLength": 25,
+        "order": [[1, "asc"]], // Ordenar por nombre por defecto
+        "columnDefs": [
+            {
+                "targets": [0], // Columna Orden
+                "type": "num",
+                "width": "80px"
+            },
+            {
+                "targets": [4], // Columna Asistencia
+                "orderable": true,
+                "type": "num"
+            },
+            {
+                "targets": [7], // Columna Acciones
+                "orderable": false,
+                "searchable": false,
+                "width": "100px"
+            }
+        ],
+        "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+               '<"row"<"col-sm-12"tr>>' +
+               '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        "search": {
+            "placeholder": "Buscar estudiantes..."
+        }
+    });
+
+    // Funcionalidad adicional
     if (typeof $ !== 'undefined') {
         $('[data-toggle="tooltip"]').tooltip();
     }
+    
+    console.log('DataTables inicializado correctamente para {{ $stats->total_students }} estudiantes');
 });
 </script>
 @endsection
