@@ -260,20 +260,6 @@
             <div class="container-fluid">
                 <div class="row justify-content-center">
                     <div class="col-12">
-                        <!-- Breadcrumb -->
-                        @if(!empty(trim($__env->yieldContent('breadcrumb'))))
-                        <div class="row align-items-center mb-2">
-                            <div class="col">
-                                <h2 class="h5 page-title">@yield('page-title', 'Dashboard')</h2>
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb">
-                                        @yield('breadcrumb')
-                                    </ol>
-                                </nav>
-                            </div>
-                        </div>
-                        @endif
-
                         <!-- Flash Messages -->
                         @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
