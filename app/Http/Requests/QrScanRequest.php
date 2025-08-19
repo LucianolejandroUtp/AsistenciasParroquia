@@ -29,13 +29,13 @@ class QrScanRequest extends FormRequest
                 'string',
                 'regex:/^[AB]-[A-Z]+-[A-Z]+-[A-Z]+$/', // Formato: A-ANTONY-ALF-VILCH
                 function ($attribute, $value, $fail) {
-                    $student = Student::where('qr_code', $value)->where('estado', 'ACTIVO')->first();
+                    $student = Student::where('student_code', $value)->where('estado', 'ACTIVO')->first();
                     if (!$student) {
                         $fail('Código QR no válido o estudiante inactivo.');
                     }
                 },
             ],
-            'session_id' => [
+            'attendance_session_id' => [
                 'required',
                 'integer',
                 'exists:attendance_sessions,id',
@@ -63,8 +63,8 @@ class QrScanRequest extends FormRequest
         return [
             'qr_code.required' => 'El código QR es obligatorio.',
             'qr_code.regex' => 'El formato del código QR no es válido.',
-            'session_id.required' => 'La sesión es obligatoria.',
-            'session_id.exists' => 'La sesión seleccionada no existe.',
+            'attendance_session_id.required' => 'La sesión es obligatoria.',
+            'attendance_session_id.exists' => 'La sesión seleccionada no existe.',
             'status.in' => 'El estado debe ser presente o tarde.',
             'notes.max' => 'Las observaciones no pueden exceder los 500 caracteres.',
         ];
@@ -77,7 +77,7 @@ class QrScanRequest extends FormRequest
     {
         return [
             'qr_code' => 'código QR',
-            'session_id' => 'sesión',
+            'attendance_session_id' => 'sesión',
             'status' => 'estado de asistencia',
             'notes' => 'observaciones',
         ];
@@ -103,7 +103,7 @@ class QrScanRequest extends FormRequest
      */
     public function getStudent(): ?Student
     {
-        return Student::where('qr_code', $this->qr_code)
+        return Student::where('student_code', $this->qr_code)
             ->where('estado', 'ACTIVO')
             ->first();
     }
