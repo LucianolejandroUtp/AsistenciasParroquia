@@ -131,18 +131,6 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link pl-3 {{ request()->routeIs('students.group-a') ? 'active' : '' }}" 
-                                   href="{{ route('students.group-a') }}">
-                                    <span class="ml-1 item-text">Grupo A</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link pl-3 {{ request()->routeIs('students.group-b') ? 'active' : '' }}" 
-                                   href="{{ route('students.group-b') }}">
-                                    <span class="ml-1 item-text">Grupo B</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link pl-3 {{ request()->routeIs('students.qr-codes') ? 'active' : '' }}" 
                                    href="{{ route('students.qr-codes') }}">
                                     <span class="ml-1 item-text">Códigos QR</span>
