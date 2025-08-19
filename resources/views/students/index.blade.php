@@ -147,17 +147,10 @@
                             <span class="badge badge-soft-primary">{{ $student->order_number ?? '-' }}</span>
                         </td>
                         <td>
-                            <div class="media align-items-center">
-                                <div class="avatar avatar-sm mr-3">
-                                    <span class="avatar-title rounded-circle bg-soft-primary text-primary">
-                                        {{ substr($student->full_name, 0, 1) }}
-                                    </span>
-                                </div>
-                                <div class="media-body">
-                                    <strong>{{ $student->full_name }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ $student->names }} {{ $student->paternal_surname }}</small>
-                                </div>
+                            <div>
+                                <strong>{{ $student->full_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ $student->names }} {{ $student->paternal_surname }}</small>
                             </div>
                         </td>
                         <td>
