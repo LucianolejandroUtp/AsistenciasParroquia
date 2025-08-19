@@ -175,7 +175,7 @@ class AttendanceController extends Controller
                 ->map(function($attendance) {
                     return (object) [
                         'student_name' => $attendance->student->full_name,
-                        'qr_code' => $attendance->student->qr_code,
+                        'qr_code' => $attendance->student->qr_code, // Usar accessor
                         'scan_time' => $attendance->created_at->format('H:i'),
                         'status' => $attendance->status,
                         'group' => $attendance->student->group->name
@@ -204,7 +204,7 @@ class AttendanceController extends Controller
             DB::beginTransaction();
 
             // Buscar estudiante por código QR
-            $student = Student::where('qr_code', $request->qr_code)
+            $student = Student::where('student_code', $request->qr_code)
                 ->where('estado', 'ACTIVO')
                 ->first();
 
@@ -220,12 +220,15 @@ class AttendanceController extends Controller
             // En este esquema, todas las sesiones permiten todos los estudiantes
             // No hay restricción por grupos específicos
 
+            // Obtener datos validados con defaults aplicados
+            $validatedData = $request->validatedWithDefaults();
+
             // Marcar asistencia (el status se determina automáticamente en QrScanRequest)
             $attendance = Attendance::markAttendance(
                 $session->id,
                 $student->id,
-                $request->status,
-                $request->notes
+                $validatedData['status'],
+                $validatedData['notes'] ?? null
             );
 
             DB::commit();
