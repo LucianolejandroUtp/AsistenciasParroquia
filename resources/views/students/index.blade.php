@@ -39,7 +39,6 @@
         <!-- Filtros del DataTable -->
         <div class="row mb-3">
             <div class="col-md-3">
-                <label for="groupFilter" class="form-label small text-muted">Filtrar por Grupo:</label>
                 <select id="groupFilter" class="form-control form-control-sm">
                     <option value="">Todos los grupos</option>
                     @foreach($groups as $group)
@@ -48,7 +47,6 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="statusFilter" class="form-label small text-muted">Filtrar por Estado:</label>
                 <select id="statusFilter" class="form-control form-control-sm">
                     <option value="">Todos los estados</option>
                     <option value="ACTIVO">Activo</option>
@@ -56,7 +54,6 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="attendanceFilter" class="form-label small text-muted">Filtrar por Asistencia:</label>
                 <select id="attendanceFilter" class="form-control form-control-sm">
                     <option value="">Todos los niveles</option>
                     <option value="high">Alta (≥90%)</option>
@@ -65,7 +62,6 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-muted d-block">&nbsp;</label>
                 <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary form-control-sm">
                     <i class="fe fe-x-circle me-1"></i>Limpiar Filtros
                 </button>
