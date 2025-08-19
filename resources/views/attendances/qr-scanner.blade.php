@@ -1,205 +1,92 @@
 @extends('layouts.app')
 
-@section('title', 'Escanear QR - Sistema de Asistencias')
-
-@section('page-title', 'Escáner de Códigos QR')
+@section('title', 'Escáner QR - Asistencias')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item">Asistencias</li>
-    <li class="breadcrumb-item active">Escanear QR</li>
-@endsection
-
-@section('additional-css')
-<style>
-.camera-container {
-    position: relative;
-    background: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.camera-placeholder {
-    color: white;
-    text-align: center;
-}
-
-.scan-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
-    border: 2px solid #28a745;
-    border-radius: 8px;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
-}
-
-.scan-corners {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-}
-
-.scan-corners::before {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border: 3px solid #28a745;
-}
-
-.scan-corners.top-left {
-    top: -2px;
-    left: -2px;
-}
-
-.scan-corners.top-left::before {
-    border-right: none;
-    border-bottom: none;
-}
-
-.scan-corners.top-right {
-    top: -2px;
-    right: -2px;
-}
-
-.scan-corners.top-right::before {
-    border-left: none;
-    border-bottom: none;
-}
-
-.scan-corners.bottom-left {
-    bottom: -2px;
-    left: -2px;
-}
-
-.scan-corners.bottom-left::before {
-    border-right: none;
-    border-top: none;
-}
-
-.scan-corners.bottom-right {
-    bottom: -2px;
-    right: -2px;
-}
-
-.scan-corners.bottom-right::before {
-    border-left: none;
-    border-top: none;
-}
-
-.recent-scan {
-    animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(100px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.scan-success {
-    border-left: 4px solid #28a745;
-    background-color: #f8fff9;
-}
-
-.scan-late {
-    border-left: 4px solid #ffc107;
-    background-color: #fffdf8;
-}
-
-.scan-error {
-    border-left: 4px solid #dc3545;
-    background-color: #fef8f8;
-}
-
-@media (max-width: 768px) {
-    .scan-overlay {
-        width: 150px;
-        height: 150px;
-    }
-}
-</style>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('attendances.history') }}">Asistencias</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Escáner QR</li>
+    </ol>
+</nav>
 @endsection
 
 @section('content')
-<!-- Selector de Sesión -->
-@if($activeSessions->count() > 1)
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h6 class="mb-0">Seleccionar Sesión para Escaneo</h6>
-                    </div>
-                    <div class="col-auto">
-                        <form method="GET" action="{{ route('attendances.qr-scanner') }}">
-                            <select name="session_id" class="form-control" onchange="this.form.submit()">
-                                @foreach($activeSessions as $session)
-                                    <option value="{{ $session->id }}" {{ $selectedSession && $selectedSession->id == $session->id ? 'selected' : '' }}>
-                                        {{ $session->title }} - {{ $session->date->format('d/m/Y') }} @if($session->time){{ $session->time->format('H:i') }}@endif
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
+<div class="container-fluid">
 
-@if($selectedSession)
-<!-- Información de la Sesión Activa -->
+<!-- Selección de Sesión -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card bg-success text-white">
-            <div class="card-body">
+        <div class="card">
+            <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h4 class="text-white mb-1">
-                            <i class="fe fe-qr-code mr-2"></i>
-                            {{ $selectedSession->title }}
+                        <h4 class="card-header-title">
+                            <i class="fe fe-calendar mr-2"></i>
+                            Seleccionar Sesión de Catequesis
                         </h4>
-                        <p class="text-white-50 mb-0">
-                            <i class="fe fe-calendar mr-1"></i>
-                            {{ $selectedSession->date->format('l, d \d\e F Y') }}
-                            @if($selectedSession->time)
-                            <i class="fe fe-clock ml-3 mr-1"></i>
-                            {{ $selectedSession->time->format('H:i') }}
-                            @endif
-                        </p>
-                        @if($selectedSession->description)
-                        <small class="text-white-75">{{ $selectedSession->description }}</small>
-                        @endif
                     </div>
+                    @if($selectedSession)
                     <div class="col-auto">
-                        <div class="text-right">
-                            <span class="badge badge-light badge-lg">Escáner Activo</span>
-                            <div class="small text-white-50 mt-1">
-                                <i class="fe fe-wifi"></i> Sesión Activa
+                        <span class="badge badge-success badge-lg">
+                            <i class="fe fe-check-circle mr-1"></i>
+                            Sesión Activa
+                        </span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            <div class="card-body">
+                @if($selectedSession)
+                    <!-- Información de la sesión seleccionada -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-1">{{ $selectedSession->title }}</h5>
+                            <p class="text-muted mb-2">{{ $selectedSession->description ?? 'Sin descripción' }}</p>
+                            <div class="d-flex flex-wrap">
+                                <span class="badge badge-primary mr-2 mb-1">
+                                    <i class="fe fe-calendar mr-1"></i>
+                                    {{ $selectedSession->date->format('d/m/Y') }}
+                                </span>
+                                <span class="badge badge-info mr-2 mb-1">
+                                    <i class="fe fe-clock mr-1"></i>
+                                    {{ $selectedSession->time ? $selectedSession->time->format('H:i') : 'Sin hora' }}
+                                </span>
+                                <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
+                                    <i class="fe fe-{{ $selectedSession->status === 'active' ? 'play' : 'pause' }}-circle mr-1"></i>
+                                    {{ ucfirst($selectedSession->status) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-right">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-secondary" data-toggle="modal" data-target="#changeSessionModal">
+                                    <i class="fe fe-edit-2 mr-1"></i>Cambiar Sesión
+                                </button>
+                                <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-outline-primary">
+                                    <i class="fe fe-users mr-1"></i>Registro Manual
+                                </a>
                             </div>
                         </div>
                     </div>
-                </div>
+                @else
+                    <!-- Selector de sesión -->
+                    <div class="text-center py-4">
+                        <i class="fe fe-calendar-x mb-3" style="font-size: 48px; color: #6c757d;"></i>
+                        <h5 class="text-muted">No hay sesión seleccionada</h5>
+                        <p class="mb-3">Seleccione una sesión activa para comenzar el escaneo de códigos QR</p>
+                        <button class="btn btn-primary" data-toggle="modal" data-target="#changeSessionModal">
+                            <i class="fe fe-plus mr-1"></i>Seleccionar Sesión
+                        </button>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
+@if($selectedSession)
 <!-- Estadísticas de Escaneo -->
 <div class="row mb-4">
     <div class="col-md-3">
@@ -249,317 +136,519 @@
                         </h4>
                     </div>
                     <div class="col-auto">
-                        <button class="btn btn-success" id="start-camera">
-                            <span class="fe fe-play mr-1"></span>Iniciar Cámara
-                        </button>
-                        <button class="btn btn-outline-secondary" id="stop-camera" style="display: none;">
-                            <span class="fe fe-square mr-1"></span>Detener
-                        </button>
+                        <div class="d-flex align-items-center">
+                            <span id="scanner-status" class="badge badge-secondary mr-2">Detenido</span>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button id="start-scanner-btn" class="btn btn-success">
+                                    <i class="fe fe-play mr-1"></i>Iniciar Scanner
+                                </button>
+                                <button id="stop-scanner-btn" class="btn btn-danger" style="display: none;">
+                                    <i class="fe fe-square mr-1"></i>Detener
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="card-body">
-                <!-- Área de la Cámara -->
-                <div class="camera-container" id="camera-container">
-                    <div class="camera-placeholder">
+                <!-- Controles de Escaneo -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Modo de Escaneo</label>
+                        <select id="scan-mode-select" class="form-control form-control-sm">
+                            <option value="continuous">Continuo (múltiples códigos)</option>
+                            <option value="single">Individual (un código)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Cámara</label>
+                        <select id="camera-select" class="form-control form-control-sm">
+                            <option value="">Detectando cámaras...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Área de Video/Scanner -->
+                <div class="scanner-container position-relative bg-dark rounded" style="height: 400px;">
+                    <!-- Contenedor para HTML5-QRCode Scanner -->
+                    <div id="qr-reader" class="w-100 h-100"></div>
+                    
+                    <!-- Overlay para mensajes cuando no está activo -->
+                    <div id="scanner-overlay" class="position-absolute d-flex flex-column justify-content-center align-items-center text-center w-100 h-100 text-light" style="top: 0; left: 0; background: rgba(0,0,0,0.7);">
                         <div class="mb-3">
                             <i class="fe fe-camera" style="font-size: 48px;"></i>
                         </div>
-                        <h5>Cámara Desactivada</h5>
-                        <p class="mb-0">Haga clic en "Iniciar Cámara" para comenzar el escaneo</p>
-                    </div>
-                    
-                    <!-- Overlay de escaneo (oculto por defecto) -->
-                    <div class="scan-overlay" id="scan-overlay" style="display: none;">
-                        <div class="scan-corners top-left"></div>
-                        <div class="scan-corners top-right"></div>
-                        <div class="scan-corners bottom-left"></div>
-                        <div class="scan-corners bottom-right"></div>
+                        <h5>Scanner Desactivado</h5>
+                        <p class="mb-0">Haga clic en "Iniciar Scanner" para comenzar</p>
                     </div>
                 </div>
-                
-                <!-- Controles adicionales -->
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-label">Configuración de Cámara</label>
-                            <select class="form-control" id="camera-select">
-                                <option value="auto">Selección Automática</option>
-                                <option value="rear">Cámara Trasera</option>
-                                <option value="front">Cámara Frontal</option>
-                            </select>
+
+                <!-- Información del último escaneo -->
+                <div id="last-scan-info" class="mt-3 p-3 bg-light rounded" style="display: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="mb-1">Último Código Escaneado</h6>
+                            <code id="last-scan-code" class="d-block"></code>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-label">Modo de Escaneo</label>
-                            <select class="form-control" id="scan-mode">
-                                <option value="continuous">Continuo</option>
-                                <option value="single">Un solo escaneo</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Entrada manual alternativa -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading">
-                                <i class="fe fe-info mr-2"></i>
-                                Entrada Manual
-                            </h6>
-                            <div class="input-group">
-                                <input type="text" class="form-control" 
-                                       placeholder="Escribe o escanea el código QR aquí..." 
-                                       id="manual-input">
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" id="manual-submit">
-                                        <span class="fe fe-check"></span>
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="form-text text-muted mt-1">
-                                Usa este campo si la cámara no funciona o para entrada rápida
-                            </small>
+                        <div class="col-auto">
+                            <span id="last-scan-status" class="badge"></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Panel de Escaneos Recientes -->
+
+    <!-- Panel de Control y Resultados -->
     <div class="col-lg-4">
+        <!-- Escaneos Recientes -->
         <div class="card">
             <div class="card-header">
                 <h4 class="card-header-title">
-                    <i class="fe fe-activity mr-2"></i>
+                    <i class="fe fe-list mr-2"></i>
                     Escaneos Recientes
                 </h4>
             </div>
-            <div class="card-body">
-                <div id="recent-scans-container">
-                    @foreach($recentScans as $scan)
-                    <div class="card mb-2 recent-scan scan-{{ $scan->status }}">
-                        <div class="card-body py-2">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h6 class="mb-0">{{ $scan->student_name }}</h6>
-                                    <small class="text-muted">
-                                        <code>{{ $scan->qr_code }}</code>
-                                        <span class="badge badge-{{ str_contains($scan->group, 'A') ? 'primary' : 'info' }} badge-sm ml-1">
-                                            {{ $scan->group }}
-                                        </span>
-                                    </small>
-                                </div>
-                                <div class="col-auto">
-                                    <div class="text-right">
-                                        <span class="badge badge-{{ $scan->status == 'present' ? 'success' : ($scan->status == 'late' ? 'warning' : 'danger') }}">
-                                            @if($scan->status == 'present')
-                                                <i class="fe fe-check"></i> Presente
-                                            @elseif($scan->status == 'late')
-                                                <i class="fe fe-clock"></i> Tarde
-                                            @else
-                                                <i class="fe fe-x"></i> Error
-                                            @endif
-                                        </span>
-                                        <div class="small text-muted">{{ $scan->scan_time }}</div>
+            <div class="card-body p-0">
+                <div id="recent-scans-container" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                    @if($recentScans && count($recentScans) > 0)
+                        @foreach($recentScans as $scan)
+                        <div class="card mb-2 recent-scan scan-{{ $scan->status }}">
+                            <div class="card-body py-2">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <h6 class="mb-0">{{ $scan->student_name }}</h6>
+                                        <small class="text-muted">
+                                            <code>{{ $scan->qr_code }}</code>
+                                            <span class="badge badge-{{ $scan->group === 'Grupo A' ? 'primary' : 'info' }} badge-sm ml-1">
+                                                {{ $scan->group }}
+                                            </span>
+                                        </small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="text-right">
+                                            <span class="badge badge-{{ $scan->status === 'present' ? 'success' : ($scan->status === 'late' ? 'warning' : 'secondary') }}">
+                                                <i class="fe fe-{{ $scan->status === 'present' ? 'check' : ($scan->status === 'late' ? 'clock' : 'user') }}"></i>
+                                                {{ ucfirst($scan->status) }}
+                                            </span>
+                                            <div class="small text-muted">{{ $scan->scan_time }}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    @endforeach
-                    
-                    @if($recentScans->isEmpty())
-                    <div class="text-center text-muted py-3">
-                        <i class="fe fe-qr-code fe-24 mb-2"></i>
-                        <p class="mb-0">No hay escaneos recientes</p>
-                        <small>Los códigos QR escaneados aparecerán aquí</small>
-                    </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-muted py-4">
+                            <i class="fe fe-inbox mb-2" style="font-size: 24px;"></i>
+                            <p class="mb-0">No hay escaneos recientes</p>
+                        </div>
                     @endif
                 </div>
-                
-                <!-- Botón para ver historial completo -->
-                <div class="text-center mt-3">
-                    <button class="btn btn-outline-primary btn-sm" onclick="window.location.href='{{ route('attendances.history') }}'">
-                        Ver Historial Completo
-                    </button>
-                </div>
             </div>
         </div>
-        
+
         <!-- Acciones Rápidas -->
-        <div class="card mt-3">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-header-title">
+                    <i class="fe fe-zap mr-2"></i>
+                    Acciones Rápidas
+                </h4>
+            </div>
             <div class="card-body">
-                <h6 class="card-title">Acciones Rápidas</h6>
                 <div class="d-grid gap-2">
-                    <button class="btn btn-outline-primary btn-block mb-2" onclick="window.location.href='{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}'">
-                        <span class="fe fe-edit mr-2"></span>Registro Manual
+                    <button id="export-session" class="btn btn-outline-primary btn-block">
+                        <i class="fe fe-download mr-1"></i>
+                        Exportar Sesión
                     </button>
-                    <button class="btn btn-outline-info btn-block mb-2" id="export-session">
-                        <span class="fe fe-download mr-2"></span>Exportar Sesión
+                    <button id="finish-session" class="btn btn-outline-warning btn-block">
+                        <i class="fe fe-check-square mr-1"></i>
+                        Finalizar Sesión
                     </button>
-                    <button class="btn btn-outline-warning btn-block" id="finish-session">
-                        <span class="fe fe-check-circle mr-2"></span>Finalizar Sesión
-                    </button>
+                    <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-outline-info btn-block">
+                        <i class="fe fe-users mr-1"></i>
+                        Registro Manual
+                    </a>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Confirmación de Escaneo -->
-<div class="modal fade" id="scanConfirmModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fe fe-check-circle text-success mr-2"></i>
-                    Código QR Escaneado
-                </h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="scan-result-content">
-                    <!-- Contenido dinámico del resultado -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-success" id="confirm-attendance">Confirmar Asistencia</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@else
-<!-- Sin sesiones activas -->
-<div class="row">
-    <div class="col-12">
-        <div class="card text-center">
-            <div class="card-body py-5">
-                <span class="fe fe-calendar-x fe-48 text-muted mb-3 d-block"></span>
-                <h4 class="text-muted">No hay sesiones activas</h4>
-                <p class="text-muted mb-4">
-                    No se encontraron sesiones activas para escanear códigos QR.<br>
-                    Cree una nueva sesión o active una existente para continuar.
-                </p>
-                <a href="{{ route('sessions.create') }}" class="btn btn-primary">
-                    <span class="fe fe-plus mr-1"></span>Crear Nueva Sesión
-                </a>
             </div>
         </div>
     </div>
 </div>
 @endif
+
+</div>
+
+<!-- Modal para cambiar sesión -->
+<div class="modal fade" id="changeSessionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Sesión</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if($activeSessions && count($activeSessions) > 0)
+                    <form method="GET" action="{{ route('attendances.qr-scanner') }}">
+                        <div class="form-group">
+                            <label for="session_id">Sesión Activa</label>
+                            <select name="session_id" id="session_id" class="form-control" required>
+                                <option value="">Seleccione una sesión...</option>
+                                @foreach($activeSessions as $session)
+                                <option value="{{ $session->id }}" {{ $selectedSession && $selectedSession->id == $session->id ? 'selected' : '' }}>
+                                    {{ $session->title }} - {{ $session->date->format('d/m/Y') }} ({{ $session->time ? $session->time->format('H:i') : 'Sin hora' }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Seleccionar</button>
+                        </div>
+                    </form>
+                @else
+                    <div class="text-center py-4">
+                        <i class="fe fe-alert-triangle mb-3 text-warning" style="font-size: 48px;"></i>
+                        <h5>No hay sesiones activas</h5>
+                        <p class="text-muted">No se encontraron sesiones de catequesis activas para hoy.</p>
+                        <a href="{{ route('attendance-sessions.create') }}" class="btn btn-primary">
+                            <i class="fe fe-plus mr-1"></i>Crear Nueva Sesión
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación de escaneo -->
+<div class="modal fade" id="scanResultModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fe fe-check-circle text-success mr-2"></i>
+                    Asistencia Registrada
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="scan-result-content">
+                    <!-- Contenido dinámico del resultado -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Continuar Escaneando</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
-@section('additional-js')
+@push('scripts')
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
+console.log('=== QR SCANNER INICIADO ===');
+// Declaraciones globales para funciones del scanner
+let initializeScanner;
+let stopScanner;
+
+function setupQRScanner() {
+    console.log('setupQRScanner ejecutado - configuración inicial completada');
+}
+
+// Configurar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupQRScanner);
+} else {
+    setupQRScanner();
+}
+
+// Variables y funciones principales
 document.addEventListener('DOMContentLoaded', function() {
-    let isScanning = false;
-    let scanMode = 'continuous';
-    
-    // Token CSRF para las peticiones AJAX
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    // Variables de configuración
+    const csrfToken = '{{ csrf_token() }}';
     const sessionId = {{ $selectedSession ? $selectedSession->id : 'null' }};
     
+    console.log('DOM Content Loaded - Session ID:', sessionId);
+    
     // Elementos del DOM
-    const startCameraBtn = document.getElementById('start-camera');
-    const stopCameraBtn = document.getElementById('stop-camera');
-    const cameraContainer = document.getElementById('camera-container');
-    const scanOverlay = document.getElementById('scan-overlay');
-    const manualInput = document.getElementById('manual-input');
-    const manualSubmit = document.getElementById('manual-submit');
+    const startScannerBtn = document.getElementById('start-scanner-btn');
+    const stopScannerBtn = document.getElementById('stop-scanner-btn');
+    const scanModeSelect = document.getElementById('scan-mode-select');
+    const scannerOverlay = document.getElementById('scanner-overlay');
+    const scannerStatus = document.getElementById('scanner-status');
     const recentScansContainer = document.getElementById('recent-scans-container');
+    const cameraSelect = document.getElementById('camera-select');
     
-    // Verificar que hay sesión seleccionada
-    if (!sessionId) {
-        alert('No hay sesión seleccionada para escanear códigos QR');
-        return;
-    }
-    
-    // Iniciar cámara
-    if (startCameraBtn) {
-        startCameraBtn.addEventListener('click', function() {
-            startCamera();
+    // Configurar event listeners
+    if (startScannerBtn) {
+        startScannerBtn.addEventListener('click', function() {
+            console.log('Botón Iniciar presionado');
+            initializeScanner();
         });
     }
     
-    // Detener cámara
-    if (stopCameraBtn) {
-        stopCameraBtn.addEventListener('click', function() {
-            stopCamera();
+    if (stopScannerBtn) {
+        stopScannerBtn.addEventListener('click', function() {
+            console.log('Botón Detener presionado');
+            stopScanner();
+        });
+        console.log('Event listener configurado para botón detener');
+    } else {
+        console.error('Botón detener no encontrado');
+    }
+    
+    // Variables de estado
+    let html5QrcodeScanner = null;
+    let scannerInitialized = false;
+    let scanMode = 'continuous';
+    let lastScanResult = null;
+    let lastScanTime = 0;
+    let scanCooldown = 3000; // 3 segundos entre scans del mismo código
+    let isProcessing = false;
+    let availableCameras = [];
+    let selectedCameraId = null;
+    console.log('QR Scanner script loaded', { sessionId, startScannerBtn });
+    
+    console.log('Scanner variables inicializadas');
+    
+    // Función para mostrar overlay del scanner
+    function showScannerOverlay() {
+        if (scannerOverlay) {
+            scannerOverlay.style.display = 'flex';
+        }
+    }
+    
+    // Función para cargar cámaras disponibles
+    function loadAvailableCameras() {
+        console.log('Cargando cámaras disponibles...');
+        
+        Html5Qrcode.getCameras()
+            .then(cameras => {
+                console.log('Cámaras detectadas:', cameras);
+                availableCameras = cameras;
+                
+                if (cameraSelect) {
+                    // Limpiar opciones existentes
+                    cameraSelect.innerHTML = '';
+                    
+                    if (cameras && cameras.length > 0) {
+                        cameras.forEach((camera, index) => {
+                            const option = document.createElement('option');
+                            option.value = camera.id;
+                            option.textContent = camera.label || `Cámara ${index + 1}`;
+                            cameraSelect.appendChild(option);
+                        });
+                        
+                        // Seleccionar primera cámara por defecto
+                        selectedCameraId = cameras[0].id;
+                        cameraSelect.value = selectedCameraId;
+                        
+                        showToast(`${cameras.length} cámara(s) detectada(s)`, 'success');
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No se encontraron cámaras';
+                        cameraSelect.appendChild(option);
+                        
+                        showToast('No se encontraron cámaras disponibles', 'warning');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error obteniendo cámaras:', err);
+                
+                if (cameraSelect) {
+                    cameraSelect.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Error detectando cámaras';
+                    cameraSelect.appendChild(option);
+                }
+                
+                showToast('Error al detectar cámaras: ' + err.message, 'error');
+            });
+    }
+    
+    // Event listeners adicionales
+    if (scanModeSelect) {
+        scanModeSelect.addEventListener('change', function() {
+            scanMode = this.value;
+            console.log('Modo de escaneo cambiado a:', scanMode);
         });
     }
     
-    // Entrada manual
-    if (manualSubmit) {
-        manualSubmit.addEventListener('click', function() {
-            const qrCode = manualInput.value.trim();
-            if (qrCode) {
-                processQRCode(qrCode);
-                manualInput.value = '';
+    if (cameraSelect) {
+        cameraSelect.addEventListener('change', function() {
+            selectedCameraId = this.value;
+            console.log('Cámara seleccionada:', selectedCameraId);
+            
+            // Si el scanner está activo, reiniciar con nueva cámara
+            if (scannerInitialized) {
+                stopScanner();
+                setTimeout(() => {
+                    initializeScanner();
+                }, 500);
             }
         });
     }
-    
-    if (manualInput) {
-        manualInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                manualSubmit.click();
+    initializeScanner = function() {
+        console.log('initializeScanner called');
+        if (!sessionId) {
+            showToast('Debe seleccionar una sesión primero', 'error');
+            return;
+        }
+        if (scannerInitialized) {
+            showToast('El scanner ya está inicializado', 'warning');
+            return;
+        }
+        showToast('Inicializando scanner...', 'info');
+        updateScannerStatus('Iniciando...');
+        console.log('Ocultando overlay...', scannerOverlay);
+        if (scannerOverlay) {
+            scannerOverlay.style.setProperty('display', 'none', 'important');
+            console.log('Overlay ocultado');
+        }
+        // Configuración del scanner
+        const config = {
+            fps: 10,
+            qrbox: { width: 300, height: 300 },
+            aspectRatio: 1.777778,
+            rememberLastUsedCamera: true,
+            showTorchButtonIfSupported: true,
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+        };
+        // Usar la cámara seleccionada o la primera disponible
+        if (!selectedCameraId && availableCameras.length > 0) {
+            selectedCameraId = availableCameras[0].id;
+        }
+        
+        if (selectedCameraId) {
+            html5QrcodeScanner = new Html5Qrcode('qr-reader');
+            html5QrcodeScanner.start(selectedCameraId, config, handleQRDetection, handleScanError)
+                        .then(() => {
+                            scannerInitialized = true;
+                            updateUIState(true);
+                            updateScannerStatus('Activo');
+                            showToast('Scanner iniciado exitosamente', 'success');
+                        })
+                        .catch(err => {
+                            console.error('Error starting scanner:', err);
+                            showToast('Error al iniciar el scanner: ' + err, 'error');
+                            updateScannerStatus('Error');
+                            showScannerOverlay();
+                        });
+        } else {
+            showToast('No hay cámara seleccionada. Por favor, seleccione una cámara.', 'error');
+            updateScannerStatus('Error');
+            showScannerOverlay();
+        }
+    };
+
+    // Función para detener el scanner
+    stopScanner = function() {
+        console.log('Deteniendo scanner...');
+        if (html5QrcodeScanner && scannerInitialized) {
+            html5QrcodeScanner.stop()
+                .then(() => {
+                    console.log('Scanner detenido exitosamente');
+                    html5QrcodeScanner = null;
+                    scannerInitialized = false;
+                    updateUIState(false);
+                    updateScannerStatus('Detenido');
+                    showScannerOverlay();
+                    showToast('Scanner detenido', 'info');
+                })
+                .catch(err => {
+                    console.error('Error stopping scanner:', err);
+                    // Forzar reset aunque haya error
+                    html5QrcodeScanner = null;
+                    scannerInitialized = false;
+                    updateUIState(false);
+                    updateScannerStatus('Detenido');
+                    showScannerOverlay();
+                    showToast('Scanner detenido (con errores)', 'warning');
+                });
+        } else {
+            console.log('Scanner no está inicializado o ya está detenido');
+        }
+    };
+
+    // Actualizar estado de la UI
+    function updateUIState(isActive) {
+        if (startScannerBtn && stopScannerBtn) {
+            if (isActive) {
+                startScannerBtn.style.display = 'none';
+                stopScannerBtn.style.display = 'inline-block';
+            } else {
+                startScannerBtn.style.display = 'inline-block';
+                stopScannerBtn.style.display = 'none';
             }
-        });
+        }
     }
-    
-    function startCamera() {
-        // Simulación de activación de cámara
-        cameraContainer.innerHTML = `
-            <div class="camera-placeholder">
-                <div class="mb-3">
-                    <i class="fe fe-camera" style="font-size: 48px; color: #28a745;"></i>
-                </div>
-                <h5 style="color: #28a745;">Cámara Activa</h5>
-                <p class="mb-0">Apunte el código QR hacia la cámara</p>
-                <div class="mt-3">
-                    <div class="spinner-border text-success" role="status">
-                        <span class="sr-only">Escaneando...</span>
-                    </div>
-                </div>
-            </div>
-        `;
+
+    // Actualizar estado del scanner
+    function updateScannerStatus(status) {
+        if (scannerStatus) {
+            scannerStatus.textContent = status;
+            scannerStatus.className = 'badge badge-' + 
+                (status === 'Activo' ? 'success' : 
+                 status === 'Error' ? 'danger' : 
+                 status === 'Iniciando...' ? 'warning' : 'secondary');
+        }
+    }
+
+    // Manejar detección de QR
+    function handleQRDetection(decodedText, decodedResult) {
+        console.log('QR detectado:', decodedText);
         
-        scanOverlay.style.display = 'block';
-        startCameraBtn.style.display = 'none';
-        stopCameraBtn.style.display = 'inline-block';
-        isScanning = true;
-    }
-    
-    function stopCamera() {
-        cameraContainer.innerHTML = `
-            <div class="camera-placeholder">
-                <div class="mb-3">
-                    <i class="fe fe-camera" style="font-size: 48px;"></i>
-                </div>
-                <h5>Cámara Desactivada</h5>
-                <p class="mb-0">Haga clic en "Iniciar Cámara" para comenzar el escaneo</p>
-            </div>
-        `;
+        const currentTime = Date.now();
         
-        scanOverlay.style.display = 'none';
-        startCameraBtn.style.display = 'inline-block';
-        stopCameraBtn.style.display = 'none';
-        isScanning = false;
+        // Evitar scans duplicados rápidos del mismo código
+        if (decodedText === lastScanResult && (currentTime - lastScanTime) < scanCooldown) {
+            console.log('Scan duplicado ignorado - cooldown activo');
+            return;
+        }
+        
+        // Evitar procesar múltiples scans simultáneamente
+        if (isProcessing) {
+            console.log('Scan ignorado - ya procesando otro');
+            return;
+        }
+
+        lastScanResult = decodedText;
+        lastScanTime = currentTime;
+        
+        // Si está en modo single, detener después del primer escaneo
+        if (scanMode === 'single') {
+            stopScanner();
+        }
+        
+        processQRCode(decodedText);
     }
-    
+
+    // Manejar errores de escaneo
+    function handleScanError(errorMessage, error) {
+        // Solo loggear errores importantes, no los de "No MultiFormat Readers"
+        if (errorMessage && !errorMessage.includes('NotFoundException') && !errorMessage.includes('No MultiFormat Readers')) {
+            console.warn('Error de escaneo:', errorMessage);
+        }
+    }
+
+    // Procesar código QR
     function processQRCode(qrCode) {
         console.log('Procesando QR:', qrCode);
         
-        // Enviar al servidor para procesar
+        // Marcar como procesando
+        isProcessing = true;
+        
         fetch('{{ route("attendances.qr-scan") }}', {
             method: 'POST',
             headers: {
@@ -575,15 +664,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Mostrar modal de confirmación
                 showScanResult(data.data);
-                
-                // Agregar a escaneos recientes
                 addRecentScan(data.data);
-                
-                // Actualizar estadísticas
                 updateScanStats();
-                
                 showToast('Asistencia registrada: ' + data.data.student_name, 'success');
             } else {
                 showToast('Error: ' + data.message, 'error');
@@ -593,58 +676,46 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error:', error);
             showToast('Error de conexión al procesar código QR', 'error');
+        })
+        .finally(() => {
+            // Liberar el lock de procesamiento después de un delay
+            setTimeout(() => {
+                isProcessing = false;
+            }, 1000);
         });
     }
     
     function showScanResult(scanData) {
-        const modal = document.getElementById('scanConfirmModal');
-        const content = document.getElementById('scan-result-content');
-        
-        let statusBadge, statusIcon, statusText;
-        
-        if (scanData.status === 'Presente') {
-            statusBadge = 'success';
-            statusIcon = 'check-circle';
-            statusText = 'Presente';
-        } else if (scanData.status === 'Tarde') {
-            statusBadge = 'warning';
-            statusIcon = 'clock';
-            statusText = 'Tarde';
-        } else {
-            statusBadge = 'danger';
-            statusIcon = 'x-circle';
-            statusText = 'Error';
+        const modalContent = document.getElementById('scan-result-content');
+        if (modalContent) {
+            modalContent.innerHTML = `
+                <div class="text-center">
+                    <h5 class="mb-1">${scanData.student_name}</h5>
+                    <p class="text-muted mb-3">
+                        <span class="badge badge-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">${scanData.group}</span>
+                    </p>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h6 mb-0">${scanData.qr_code}</div>
+                            <small class="text-muted">Código QR</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h6 mb-0">${scanData.marked_at}</div>
+                            <small class="text-muted">Hora de Registro</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#scanResultModal').modal('show');
         }
-        
-        content.innerHTML = `
-            <div class="avatar avatar-lg mb-3">
-                <span class="avatar-title rounded-circle bg-soft-${scanData.group === 'Grupo A' ? 'primary' : 'info'} text-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">
-                    ${scanData.student_name.charAt(0)}
-                </span>
-            </div>
-            <h5>${scanData.student_name}</h5>
-            <p class="text-muted">
-                <code>${scanData.qr_code}</code><br>
-                <span class="badge badge-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">${scanData.group}</span>
-            </p>
-            <div class="alert alert-${statusBadge}">
-                <i class="fe fe-${statusIcon} mr-2"></i>
-                Estado: <strong>${statusText}</strong>
-            </div>
-            <small class="text-muted">
-                Registrado a las ${scanData.marked_at}
-            </small>
-        `;
-        
-        $(modal).modal('show');
     }
     
     function addRecentScan(scanData) {
-        const statusClass = scanData.status === 'Presente' ? 'success' : (scanData.status === 'Tarde' ? 'late' : 'error');
-        const statusIcon = scanData.status === 'Presente' ? 'check' : (scanData.status === 'Tarde' ? 'clock' : 'x');
-        const badgeClass = scanData.status === 'Presente' ? 'success' : (scanData.status === 'Tarde' ? 'warning' : 'danger');
-        
         const scanElement = document.createElement('div');
+        const statusClass = scanData.status === 'present' ? 'success' : (scanData.status === 'late' ? 'warning' : 'secondary');
+        const badgeClass = scanData.status === 'present' ? 'success' : (scanData.status === 'late' ? 'warning' : 'secondary');
+        const statusIcon = scanData.status === 'present' ? 'check' : (scanData.status === 'late' ? 'clock' : 'user');
+        
         scanElement.className = `card mb-2 recent-scan scan-${statusClass}`;
         scanElement.innerHTML = `
             <div class="card-body py-2">
@@ -671,7 +742,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Eliminar mensaje de "no hay escaneos" si existe
         const noScansMessage = recentScansContainer.querySelector('.text-center.text-muted');
         if (noScansMessage) {
             noScansMessage.remove();
@@ -679,7 +749,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         recentScansContainer.insertBefore(scanElement, recentScansContainer.firstChild);
         
-        // Mantener solo los últimos 5 escaneos
         const scans = recentScansContainer.querySelectorAll('.recent-scan');
         if (scans.length > 5) {
             scans[scans.length - 1].remove();
@@ -687,7 +756,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateScanStats() {
-        // Incrementar contador de escaneos exitosos
         const totalScans = document.querySelector('.text-success.h3');
         const successfulScans = document.querySelector('.text-primary.h3');
         
@@ -698,7 +766,6 @@ document.addEventListener('DOMContentLoaded', function() {
             totalScans.textContent = currentTotal;
             successfulScans.textContent = currentSuccessful;
             
-            // Actualizar tasa de éxito
             const successRate = document.querySelector('.text-info.h3');
             if (successRate) {
                 const rate = Math.round((currentSuccessful / currentTotal) * 100);
@@ -708,9 +775,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showToast(message, type) {
-        // Implementación simple de toast
         const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        toast.className = `alert alert-${type === 'success' ? 'success' : (type === 'error' ? 'danger' : 'info')} alert-dismissible fade show position-fixed`;
         toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
         toast.innerHTML = `
             ${message}
@@ -727,13 +793,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Configuración de modo de escaneo
-    const scanModeSelect = document.getElementById('scan-mode');
-    if (scanModeSelect) {
-        scanModeSelect.addEventListener('change', function() {
-            scanMode = this.value;
-        });
+    // Mostrar overlay inicial si no hay sesión
+    if (!sessionId) {
+        showScannerOverlay();
+        updateScannerStatus('Sin sesión');
     }
+    
+    // Cargar cámaras disponibles al inicializar
+    loadAvailableCameras();
     
     // Acciones rápidas
     const exportBtn = document.getElementById('export-session');
@@ -747,11 +814,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (finishBtn) {
         finishBtn.addEventListener('click', function() {
             if (confirm('¿Finalizar la sesión actual? No podrá registrar más asistencias.')) {
-                // Aquí iría la lógica para finalizar la sesión
-                showToast('Sesión finalizada exitosamente', 'success');
+                showToast('Funcionalidad será implementada próximamente', 'info');
             }
         });
     }
+
+    // Cleanup al salir
+    window.addEventListener('beforeunload', function() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+        }
+    });
 });
 </script>
-@endsection
+@endpush
