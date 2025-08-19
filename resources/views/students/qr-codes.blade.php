@@ -120,8 +120,12 @@
     <div class="col-md-2">
         <select class="form-control">
             <option value="">Todos los grupos</option>
-            <option value="1">Grupo A</option>
-            <option value="2">Grupo B</option>
+            @php
+                $groups = App\Models\Group::orderBy('name')->get();
+            @endphp
+            @foreach($groups as $group)
+                <option value="{{ $group->id }}">{{ $group->name }}</option>
+            @endforeach
         </select>
     </div>
     <div class="col-md-6 text-right">
@@ -165,7 +169,7 @@
 <!-- Vista en Cuadrícula (por defecto) -->
 <div id="grid-view">
     <div class="row">
-        @foreach($mockQrCodes as $qrCode)
+        @foreach($qrCodes as $qrCode)
         <div class="col-md-4 col-lg-3 mb-4">
             <div class="card qr-card">
                 <div class="card-header text-center">
@@ -251,7 +255,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($mockQrCodes as $qrCode)
+                        @foreach($qrCodes as $qrCode)
                         <tr>
                             <td>
                                 <div class="media align-items-center">

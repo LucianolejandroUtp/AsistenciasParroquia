@@ -32,36 +32,26 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $stats->group_a_count }}</span>
-                        <p class="small text-muted mb-0">Grupo A</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-user-check fe-32 text-success"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $stats->group_b_count }}</span>
-                        <p class="small text-muted mb-0">Grupo B</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-user-plus fe-32 text-info"></span>
+    <!-- Estadísticas dinámicas por grupo -->
+    @if($stats->groups && $stats->groups->count() > 0)
+        @foreach($stats->groups as $group)
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <span class="h2 mb-0">{{ $group->students_count }}</span>
+                            <p class="small text-muted mb-0">{{ $group->name }}</p>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fe fe-user-check fe-32 text-{{ $loop->first ? 'success' : 'info' }}"></span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        @endforeach
+    @endif
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
