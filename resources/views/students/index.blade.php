@@ -21,9 +21,6 @@
         <div class="row align-items-center">
             <div class="col">
                 <h4 class="card-header-title">Lista de Estudiantes de Primera Comunión</h4>
-                <p class="card-text small text-muted mb-0">
-                    Gestiona todos los estudiantes registrados con funciones avanzadas de búsqueda, filtrado y ordenamiento.
-                </p>
             </div>
             <div class="col-auto">
                 <button class="btn btn-sm btn-primary" type="button">
