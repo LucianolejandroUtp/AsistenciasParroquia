@@ -90,6 +90,42 @@
         </div>
     </div>
     <div class="card-body">
+        <!-- Filtros del DataTable -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="groupFilter" class="form-label small text-muted">Filtrar por Grupo:</label>
+                <select id="groupFilter" class="form-control form-control-sm">
+                    <option value="">Todos los grupos</option>
+                    @foreach($groups as $group)
+                        <option value="{{ $group->name }}">{{ $group->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="statusFilter" class="form-label small text-muted">Filtrar por Estado:</label>
+                <select id="statusFilter" class="form-control form-control-sm">
+                    <option value="">Todos los estados</option>
+                    <option value="ACTIVO">Activo</option>
+                    <option value="INACTIVO">Inactivo</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="attendanceFilter" class="form-label small text-muted">Filtrar por Asistencia:</label>
+                <select id="attendanceFilter" class="form-control form-control-sm">
+                    <option value="">Todos los niveles</option>
+                    <option value="high">Alta (≥90%)</option>
+                    <option value="medium">Media (70-89%)</option>
+                    <option value="low">Baja (<70%)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted d-block">&nbsp;</label>
+                <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary form-control-sm">
+                    <i class="fe fe-x-circle me-1"></i>Limpiar Filtros
+                </button>
+            </div>
+        </div>
+        
         <div class="table-responsive">
             <table class="table table-hover datatables" id="studentsDataTable">
                 <thead>
@@ -217,7 +253,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar DataTables
-    $('#studentsDataTable').DataTable({
+    var table = $('#studentsDataTable').DataTable({
         autoWidth: true,
         responsive: true,
         "language": {
@@ -255,12 +291,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Filtro personalizado para asistencia
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            if (settings.nTable.id !== 'studentsDataTable') {
+                return true;
+            }
+
+            var attendanceFilter = $('#attendanceFilter').val();
+            if (attendanceFilter === '') {
+                return true;
+            }
+
+            // Extraer porcentaje de asistencia de la columna 4 (índice 4)
+            var attendanceText = data[4] || '';
+            var percentageMatch = attendanceText.match(/(\d+)%/);
+            
+            if (!percentageMatch) {
+                return true;
+            }
+
+            var percentage = parseInt(percentageMatch[1]);
+
+            switch (attendanceFilter) {
+                case 'high':
+                    return percentage >= 90;
+                case 'medium':
+                    return percentage >= 70 && percentage < 90;
+                case 'low':
+                    return percentage < 70;
+                default:
+                    return true;
+            }
+        }
+    );
+
+    // Event listeners para filtros
+    $('#groupFilter').on('change', function() {
+        var selectedGroup = this.value;
+        table.column(2).search(selectedGroup).draw(); // Columna 2 es "Grupo"
+    });
+
+    $('#statusFilter').on('change', function() {
+        var selectedStatus = this.value;
+        table.column(5).search(selectedStatus).draw(); // Columna 5 es "Estado"
+    });
+
+    $('#attendanceFilter').on('change', function() {
+        table.draw(); // Redibuja la tabla aplicando el filtro personalizado
+    });
+
+    // Botón para limpiar todos los filtros
+    function clearAllFilters() {
+        $('#groupFilter').val('');
+        $('#statusFilter').val('');
+        $('#attendanceFilter').val('');
+        table.search('').columns().search('').draw();
+    }
+
+    // Event listener para el botón limpiar filtros
+    $('#clearFiltersBtn').on('click', clearAllFilters);
+
     // Funcionalidad adicional
     if (typeof $ !== 'undefined') {
         $('[data-toggle="tooltip"]').tooltip();
     }
     
     console.log('DataTables inicializado correctamente para {{ $stats->total_students }} estudiantes');
+    console.log('Filtros dinámicos activados: Grupo, Estado, Asistencia');
 });
 </script>
 @endsection
