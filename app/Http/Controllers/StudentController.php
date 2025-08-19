@@ -13,67 +13,57 @@ class StudentController extends Controller
      */
     public function index()
     {
-        // Datos mock para la vista placeholder
-        $mockStudents = [
-            (object) [
-                'id' => 1,
-                'full_name' => 'Antony Alexander Alférez Vilchez',
-                'qr_code' => 'A-ANTONY-ALF-VILCH',
-                'group_name' => 'Grupo A',
-                'group_id' => 1,
-                'order_number' => 1,
-                'status' => 'ACTIVO',
-                'total_sessions' => 12,
-                'attended_sessions' => 10,
-                'attendance_percentage' => 83
-            ],
-            (object) [
-                'id' => 2,
-                'full_name' => 'María Elena González Pérez',
-                'qr_code' => 'A-MARIA-GON-PER',
-                'group_name' => 'Grupo A',
-                'group_id' => 1,
-                'order_number' => 2,
-                'status' => 'ACTIVO',
-                'total_sessions' => 12,
-                'attended_sessions' => 11,
-                'attendance_percentage' => 92
-            ],
-            (object) [
-                'id' => 3,
-                'full_name' => 'Carlos Eduardo Ramírez Silva',
-                'qr_code' => 'B-CARLOS-RAM-SIL',
-                'group_name' => 'Grupo B',
-                'group_id' => 2,
-                'order_number' => 1,
-                'status' => 'ACTIVO',
-                'total_sessions' => 12,
-                'attended_sessions' => 9,
-                'attendance_percentage' => 75
-            ],
-            (object) [
-                'id' => 4,
-                'full_name' => 'Ana Sofía Mendoza Castro',
-                'qr_code' => 'B-ANA-MEN-CAS',
-                'group_name' => 'Grupo B',
-                'group_id' => 2,
-                'order_number' => 2,
-                'status' => 'ACTIVO',
-                'total_sessions' => 12,
-                'attended_sessions' => 12,
-                'attendance_percentage' => 100
-            ]
-        ];
+        // Obtener todos los estudiantes con sus grupos y estadísticas de asistencia
+        $students = Student::with(['group', 'attendances.attendanceSession'])
+            ->orderBy('names')
+            ->orderBy('paternal_surname')
+            ->get()
+            ->map(function ($student) {
+                // Calcular estadísticas de asistencia
+                $totalSessions = $student->attendances->pluck('attendanceSession')->unique('id')->count();
+                $attendedSessions = $student->attendances->count();
+                $attendancePercentage = $totalSessions > 0 ? round(($attendedSessions / $totalSessions) * 100) : 0;
+
+                return (object) [
+                    'id' => $student->id,
+                    'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
+                    'names' => $student->names,
+                    'paternal_surname' => $student->paternal_surname,
+                    'maternal_surname' => $student->maternal_surname,
+                    'qr_code' => $student->qr_code,
+                    'student_code' => $student->student_code,
+                    'group_name' => $student->group ? $student->group->name : 'Sin Grupo',
+                    'group_id' => $student->group_id,
+                    'order_number' => $student->order_number,
+                    'status' => $student->estado,
+                    'total_sessions' => $totalSessions,
+                    'attended_sessions' => $attendedSessions,
+                    'attendance_percentage' => $attendancePercentage,
+                    'created_at' => $student->created_at->format('d/m/Y'),
+                    'updated_at' => $student->updated_at->format('d/m/Y H:i')
+                ];
+            });
+
+        // Calcular estadísticas generales
+        $totalStudents = Student::count();
+        $groupACount = Student::whereHas('group', function($query) {
+            $query->where('name', 'like', '%A%');
+        })->count();
+        $groupBCount = Student::whereHas('group', function($query) {
+            $query->where('name', 'like', '%B%');
+        })->count();
+        $activeStudents = Student::where('estado', 'ACTIVO')->count();
+        $averageAttendance = $students->avg('attendance_percentage');
 
         $stats = (object) [
-            'total_students' => 78,
-            'group_a_count' => 40,
-            'group_b_count' => 38,
-            'active_students' => 76,
-            'average_attendance' => 87
+            'total_students' => $totalStudents,
+            'group_a_count' => $groupACount,
+            'group_b_count' => $groupBCount,
+            'active_students' => $activeStudents,
+            'average_attendance' => round($averageAttendance, 1)
         ];
 
-        return view('students.index', compact('mockStudents', 'stats'));
+        return view('students.index', compact('students', 'stats'));
     }
 
     /**
