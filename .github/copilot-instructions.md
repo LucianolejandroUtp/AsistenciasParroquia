@@ -13,6 +13,42 @@ This is a **Laravel 11.x attendance tracking system** for First Communion studen
 
 ## Database Architecture
 
+### ⚠️ **CRITICAL DATABASE FIELD VERIFICATION RULE**
+
+**MANDATORY BEFORE ANY CONTROLLER/MODEL IMPLEMENTATION:**
+1. **ALWAYS verify field names** in migration files before writing any code
+2. **NEVER assume standard Laravel field names** (e.g., `first_name`, `last_name`, `status`)
+3. **Check actual column names** in `database/migrations/` for each table
+4. **This project uses custom field naming conventions** that differ from Laravel defaults
+
+**Field Verification Process:**
+```bash
+# STEP 1: Always check migration files first
+grep -r "table->" database/migrations/[table_name]_table.php
+
+# STEP 2: Verify field names in the specific migration
+# STEP 3: Use EXACT field names from migration in controllers/models
+```
+
+**Common Field Name Differences in This Project:**
+- ❌ `first_name`, `last_name` → ✅ `names`, `paternal_surname`, `maternal_surname`  
+- ❌ `status` → ✅ `estado`
+- ❌ Standard `created_at`/`updated_at` → ✅ Custom timestamp implementation
+- ❌ `email` (sometimes nullable) → ✅ Check actual implementation per table
+
+**Example Migration Check:**
+```php
+// Before writing Student controller, VERIFY in migration:
+// database/migrations/2025_08_15_053519_create_students_table.php
+Schema::create('students', function (Blueprint $table) {
+    $table->string('names');                    // NOT first_name
+    $table->string('paternal_surname');         // NOT last_name  
+    $table->string('maternal_surname')->nullable();
+    $table->enum('estado', ['ACTIVO', 'INACTIVO','ELIMINADO']); // NOT status
+    // ... other fields
+});
+```
+
 ### Key Schema Patterns
 
 **Custom Field Structure:** All tables follow a specific pattern:
@@ -95,6 +131,38 @@ composer run dev  # Runs server + queue + vite concurrently with hot reload
 - The server handles Laravel + Queue processing + Asset compilation automatically
 
 ## Code Patterns
+
+### **MANDATORY PRE-IMPLEMENTATION CHECKS**
+
+**Before writing ANY controller, model, or database interaction code:**
+
+1. **📋 Migration Verification:** 
+   ```bash
+   # Read the actual migration file for the table
+   cat database/migrations/*_create_[table_name]_table.php
+   ```
+
+2. **🔍 Field Name Documentation:**
+   - List all actual column names from the migration
+   - Note custom field patterns (e.g., `estado` instead of `status`)
+   - Document any non-standard Laravel conventions
+
+3. **✅ Implementation Checklist:**
+   - [ ] Migration file reviewed
+   - [ ] Actual field names confirmed  
+   - [ ] Custom patterns documented
+   - [ ] Controller uses correct field names
+   - [ ] Model fillable array matches migration
+   - [ ] Views reference correct field names
+
+**Example Pre-Implementation Check:**
+```php
+// ✅ CORRECT: After checking migration
+$student = Student::where('estado', 'ACTIVO')->orderBy('names')->get();
+
+// ❌ WRONG: Assuming Laravel defaults  
+$student = Student::where('status', 'active')->orderBy('first_name')->get();
+```
 
 ### Architectural Pattern
 **Hybrid Architecture: MVC + Service + Repository**
@@ -206,6 +274,25 @@ GET /api/attendances/session/{sessionId}
 ```
 
 ## ⚠️ IMPORTANT DEVELOPMENT GUIDELINES
+
+### Database Field Verification Rules
+**⚠️ CRITICAL:** This project has experienced multiple field name errors due to assumptions about standard Laravel conventions.
+
+**MANDATORY VERIFICATION BEFORE ANY DATABASE CODE:**
+1. **Read migration files first** - Never assume field names
+2. **Document actual column names** in comments before coding
+3. **Test queries** against actual schema, not assumed names
+4. **Remember custom patterns**: `estado` not `status`, `names` not `first_name`, etc.
+
+**Example Verification Process:**
+```php
+// ✅ ALWAYS DO THIS FIRST:
+// Check: database/migrations/*_create_students_table.php
+// Confirmed fields: names, paternal_surname, maternal_surname, estado
+
+// ✅ THEN write code using actual fields:
+$students = Student::where('estado', 'ACTIVO')->orderBy('names')->get();
+```
 
 ### Template Usage Rules
 - **Templates Directory:** `docs/recursos_desarrollo/templates_estilos/` contains **REFERENCE MATERIALS ONLY**
