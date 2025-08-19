@@ -15,60 +15,6 @@
 @endsection
 
 @section('content')
-<!-- Stats Row -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $stats->total_students }}</span>
-                        <p class="small text-muted mb-0">Total Estudiantes</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-users fe-32 text-primary"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Estadísticas dinámicas por grupo -->
-    @if($stats->groups && $stats->groups->count() > 0)
-        @foreach($stats->groups as $group)
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <span class="h2 mb-0">{{ $group->students_count }}</span>
-                            <p class="small text-muted mb-0">{{ $group->name }}</p>
-                        </div>
-                        <div class="col-auto">
-                            <span class="fe fe-user-check fe-32 text-{{ $loop->first ? 'success' : 'info' }}"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    @endif
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $stats->average_attendance }}%</span>
-                        <p class="small text-muted mb-0">Asistencia Promedio</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-trending-up fe-32 text-warning"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Tabla de Estudiantes con DataTables -->
 <div class="card">
     <div class="card-header">
@@ -350,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('[data-toggle="tooltip"]').tooltip();
     }
     
-    console.log('DataTables inicializado correctamente para {{ $stats->total_students }} estudiantes');
+    console.log('DataTables inicializado correctamente');
     console.log('Filtros dinámicos activados: Grupo, Estado, Asistencia');
 });
 </script>

@@ -44,27 +44,10 @@ class StudentController extends Controller
                 ];
             });
 
-        // Calcular estadísticas generales
-        $totalStudents = Student::count();
-        $activeStudents = Student::where('estado', 'ACTIVO')->count();
-        $averageAttendance = $students->avg('attendance_percentage');
-        
-        // Obtener estadísticas por grupo dinámicamente
-        $groupStats = Group::withCount(['students' => function($query) {
-            $query->where('estado', 'ACTIVO');
-        }])->get();
-
         // Obtener todos los grupos para filtros
         $groups = Group::orderBy('name')->get();
 
-        $stats = (object) [
-            'total_students' => $totalStudents,
-            'active_students' => $activeStudents,
-            'average_attendance' => round($averageAttendance, 1),
-            'groups' => $groupStats
-        ];
-
-        return view('students.index', compact('students', 'stats', 'groups'));
+        return view('students.index', compact('students', 'groups'));
     }
 
 
