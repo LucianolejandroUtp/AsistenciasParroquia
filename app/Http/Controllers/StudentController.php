@@ -54,6 +54,9 @@ class StudentController extends Controller
             $query->where('estado', 'ACTIVO');
         }])->get();
 
+        // Obtener todos los grupos para filtros
+        $groups = Group::orderBy('name')->get();
+
         $stats = (object) [
             'total_students' => $totalStudents,
             'active_students' => $activeStudents,
@@ -61,7 +64,7 @@ class StudentController extends Controller
             'groups' => $groupStats
         ];
 
-        return view('students.index', compact('students', 'stats'));
+        return view('students.index', compact('students', 'stats', 'groups'));
     }
 
 
