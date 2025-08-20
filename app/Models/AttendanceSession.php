@@ -77,6 +77,14 @@ class AttendanceSession extends Model
     }
 
     /**
+     * Scope a query to include active and closed sessions (excludes deleted).
+     */
+    public function scopeActiveOrClosed($query)
+    {
+        return $query->whereIn('estado', ['ACTIVO', 'CERRADO']);
+    }
+
+    /**
      * Scope a query to filter by date range.
      */
     public function scopeBetweenDates($query, $startDate, $endDate)
@@ -183,10 +191,23 @@ class AttendanceSession extends Model
     }
 
     /**
+     * Check if this session is closed.
+     */
+    public function isClosed(): bool
+    {
+        return $this->estado === 'CERRADO';
+    }
+
+    /**
      * Check if attendance can be taken for this session.
      */
     public function canTakeAttendance(): bool
     {
+        // No permitir registro en sesiones cerradas
+        if ($this->isClosed()) {
+            return false;
+        }
+
         // En desarrollo, permitir registro para cualquier sesión activa
         if (config('app.env') === 'local') {
             return $this->estado === 'ACTIVO';
@@ -203,6 +224,22 @@ class AttendanceSession extends Model
     {
         // Cannot delete sessions that already have attendance records
         return $this->attendances()->count() === 0;
+    }
+
+    /**
+     * Check if this session can be closed.
+     */
+    public function canBeClosed(): bool
+    {
+        return $this->estado === 'ACTIVO';
+    }
+
+    /**
+     * Check if this session can be reopened.
+     */
+    public function canBeReopened(): bool
+    {
+        return $this->estado === 'CERRADO';
     }
 
     /**

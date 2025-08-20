@@ -105,6 +105,14 @@ class AttendanceController extends Controller
             $student = Student::findOrFail($request->student_id);
             $session = AttendanceSession::findOrFail($request->attendance_session_id);
 
+            // Verificar que la sesión permita registro de asistencias
+            if (!$session->canTakeAttendance()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pueden registrar asistencias en esta sesión. La sesión puede estar cerrada o inactiva.'
+                ], 422);
+            }
+
             // Marcar asistencia usando el método del modelo
             $attendance = Attendance::markAttendance(
                 $session->id,
@@ -216,6 +224,14 @@ class AttendanceController extends Controller
             }
 
             $session = AttendanceSession::findOrFail($request->attendance_session_id);
+
+            // Verificar que la sesión permita registro de asistencias
+            if (!$session->canTakeAttendance()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pueden registrar asistencias en esta sesión. La sesión puede estar cerrada o inactiva.'
+                ], 422);
+            }
 
             // En este esquema, todas las sesiones permiten todos los estudiantes
             // No hay restricción por grupos específicos

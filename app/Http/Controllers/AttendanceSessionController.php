@@ -17,7 +17,7 @@ class AttendanceSessionController extends Controller
     {
         $query = AttendanceSession::query()
             ->with(['creator'])
-            ->active();
+            ->activeOrClosed(); // Mostrar sesiones activas y cerradas, no eliminadas
 
         // Filtros opcionales
         if ($request->filled('fecha_desde')) {
@@ -93,6 +93,13 @@ class AttendanceSessionController extends Controller
      */
     public function edit(AttendanceSession $session)
     {
+        // No permitir editar sesiones cerradas
+        if ($session->isClosed()) {
+            return redirect()
+                ->route('sessions.show', $session)
+                ->with('warning', 'No se pueden editar sesiones cerradas. Debe reabrir la sesión primero.');
+        }
+
         // Solo permitir editar sesiones futuras o del día actual
         if ($session->isPast() && !$session->isToday()) {
             return redirect()
@@ -198,5 +205,55 @@ class AttendanceSessionController extends Controller
         $newSession->updated_at = now();
 
         return view('sessions.create', ['session' => $newSession]);
+    }
+
+    /**
+     * Close a session to prevent further attendance registrations.
+     */
+    public function close(AttendanceSession $session)
+    {
+        try {
+            if (!$session->canBeClosed()) {
+                return redirect()
+                    ->route('sessions.show', $session)
+                    ->with('error', 'Esta sesión no puede ser cerrada en su estado actual.');
+            }
+
+            $session->update(['estado' => 'CERRADO']);
+
+            return redirect()
+                ->route('sessions.show', $session)
+                ->with('success', 'Sesión cerrada exitosamente. No se podrán registrar más asistencias.');
+                
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('sessions.show', $session)
+                ->with('error', 'Error al cerrar la sesión: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reopen a closed session to allow attendance registrations again.
+     */
+    public function reopen(AttendanceSession $session)
+    {
+        try {
+            if (!$session->canBeReopened()) {
+                return redirect()
+                    ->route('sessions.show', $session)
+                    ->with('error', 'Esta sesión no puede ser reabierta en su estado actual.');
+            }
+
+            $session->update(['estado' => 'ACTIVO']);
+
+            return redirect()
+                ->route('sessions.show', $session)
+                ->with('success', 'Sesión reabierta exitosamente. Se pueden registrar asistencias nuevamente.');
+                
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('sessions.show', $session)
+                ->with('error', 'Error al reabrir la sesión: ' . $e->getMessage());
+        }
     }
 }
