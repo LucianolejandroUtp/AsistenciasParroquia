@@ -219,30 +219,7 @@
     </div>
 </div>
 
-<!-- Modo de Vista -->
-<div class="row mb-3 no-print">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h6 class="mb-0">Modo de Vista</h6>
-                    </div>
-                    <div class="col-auto">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary active" id="view-grid">
-                                <span class="fe fe-grid"></span> Cuadrícula
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" id="view-list">
-                                <span class="fe fe-list"></span> Lista
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Modo de Vista removido: solo se muestra la cuadrícula -->
 
 <!-- Vista en Cuadrícula (por defecto) -->
 <div id="grid-view">
@@ -341,84 +318,7 @@
     </div>
 </div>
 
-<!-- Vista en Lista (oculta por defecto) -->
-<div id="list-view" style="display: none;">
-    <div class="card">
-        <div class="card-header">
-            <h4 class="card-header-title">Lista de Códigos QR</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-borderless table-hover">
-                    <thead>
-                        <tr>
-                            <th>Estudiante</th>
-                            <th>Grupo</th>
-                            <th>Código QR</th>
-                            <th>Total Escaneos</th>
-                            <th>Último Escaneo</th>
-                            <th class="text-right no-print">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($qrCodes as $qrCode)
-                        <tr>
-                            <td>
-                                <div class="media align-items-center">
-                                    <div class="avatar avatar-sm mr-3">
-                                        <span class="avatar-title rounded-circle bg-soft-primary text-primary">
-                                            {{ substr($qrCode->full_name, 0, 1) }}
-                                        </span>
-                                    </div>
-                                    <div class="media-body">
-                                        <strong>{{ $qrCode->full_name }}</strong>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge badge-{{ str_contains($qrCode->group_name, 'A') ? 'primary' : 'info' }}">
-                                    {{ $qrCode->group_name }}
-                                </span>
-                            </td>
-                            <td>
-                                <code class="small">{{ $qrCode->qr_code }}</code>
-                            </td>
-                            <td>
-                                <span class="badge badge-success">{{ $qrCode->total_scans }}</span>
-                            </td>
-                            <td>
-                                <small>{{ \Carbon\Carbon::parse($qrCode->last_scanned)->format('d/m/Y H:i') }}</small>
-                            </td>
-                            <td class="text-right no-print">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-white" data-toggle="dropdown">
-                                        <span class="fe fe-more-vertical fe-12"></span>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="#" onclick="downloadQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
-                                            <span class="fe fe-download fe-12 mr-2"></span>Descargar
-                                        </a>
-                                        <a class="dropdown-item" href="#" onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
-                                            <span class="fe fe-refresh-cw fe-12 mr-2"></span>Regenerar
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#" onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
-                                            <span class="fe fe-printer fe-12 mr-2"></span>Imprimir
-                                        </a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="card-footer">
-            {{ $qrCodes->links() }}
-        </div>
-    </div>
-</div>
+<!-- Lista eliminada: sólo queda vista en cuadrícula -->
 
 <!-- Instrucciones de Uso -->
 <div class="row mt-4">
@@ -702,27 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Esperar un poco para que se carguen las bibliotecas
     setTimeout(initializeQRCodes, 100);
     
-    // Alternar entre vista de cuadrícula y lista
-    const viewGrid = document.getElementById('view-grid');
-    const viewList = document.getElementById('view-list');
-    const gridView = document.getElementById('grid-view');
-    const listView = document.getElementById('list-view');
-    
-    if (viewGrid && viewList && gridView && listView) {
-        viewGrid.addEventListener('click', function() {
-            gridView.style.display = 'block';
-            listView.style.display = 'none';
-            viewGrid.classList.add('active');
-            viewList.classList.remove('active');
-        });
-        
-        viewList.addEventListener('click', function() {
-            gridView.style.display = 'none';
-            listView.style.display = 'block';
-            viewList.classList.add('active');
-            viewGrid.classList.remove('active');
-        });
-    }
+    // Eliminado: Alternancia de vista (solo queda cuadrícula)
     
     // Funcionalidad de búsqueda
     const searchInput = document.querySelector('input[placeholder="Buscar código QR..."]');
