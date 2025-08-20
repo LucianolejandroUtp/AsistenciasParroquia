@@ -298,7 +298,7 @@
                             </div>
                             <div class="mt-2">Generando QR...</div>
                         </div>
-                        <canvas id="qr-canvas-{{ $qrCode->id }}" class="qr-canvas" style="display: none;"></canvas>
+                        <canvas id="qr-canvas-{{ $qrCode->id }}" class="qr-canvas" style="display: none;" data-code="{{ $qrCode->qr_code }}" data-name="{{ preg_replace('/\s+/', '_', $qrCode->full_name) }}"></canvas>
                         <div class="qr-error" id="qr-error-{{ $qrCode->id }}" style="display: none;">
                             <i class="fe fe-alert-circle"></i>
                             <div>Error al generar QR</div>
@@ -416,6 +416,9 @@
 @section('additional-js')
 <!-- QRCode.js Library from CDNJS (más confiable) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<!-- JSZip y FileSaver para descarga masiva -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <script>
 // Control de paginación
@@ -608,18 +611,54 @@ function printQR(studentId, studentName) {
 }
 
 // Descargar todos los QR como ZIP
+// Cargar JSZip y FileSaver desde CDN si no están presentes (se añadirá script tag en plantilla)
 function downloadAllQR() {
-    const canvases = document.querySelectorAll('.qr-canvas[style*="display: block"], .qr-canvas:not([style*="display: none"])');
+    const canvases = Array.from(document.querySelectorAll('.qr-canvas')).filter(c => c && c.style.display !== 'none' && c.width > 0);
     if (canvases.length === 0) {
         alert('No hay códigos QR generados para descargar');
         return;
     }
 
-    // Simulación de descarga masiva (requiere biblioteca ZIP.js)
-    alert(`Preparando descarga de ${canvases.length} códigos QR...`);
-    
-    // TODO: Implementar descarga real con ZIP.js
-    console.log('Descarga masiva de QR codes:', canvases.length);
+    // Crear ZIP usando JSZip
+    if (typeof JSZip === 'undefined' || typeof saveAs === 'undefined') {
+        alert('Dependencias para la descarga masiva no cargadas. Intenta recargar la página.');
+        console.error('JSZip o FileSaver no disponibles');
+        return;
+    }
+
+    const zip = new JSZip();
+    const folder = zip.folder('qrcodes');
+
+    const promises = canvases.map((canvas) => {
+        return new Promise((resolve) => {
+            const name = canvas.dataset.name || `qr_${canvas.id}`;
+            const code = canvas.dataset.code || canvas.id;
+            try {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        console.warn('No se pudo obtener blob de canvas', canvas.id);
+                        resolve();
+                        return;
+                    }
+                    const filename = `${name}_${code}.png`;
+                    folder.file(filename, blob);
+                    resolve();
+                }, 'image/png');
+            } catch (err) {
+                console.error('Error convirtiendo canvas a blob', err);
+                resolve();
+            }
+        });
+    });
+
+    Promise.all(promises).then(() => {
+        zip.generateAsync({ type: 'blob' }).then((content) => {
+            saveAs(content, `qr_codes_${new Date().toISOString().slice(0,10)}.zip`);
+        }).catch(err => {
+            console.error('Error generando ZIP:', err);
+            alert('Error al generar el ZIP de códigos QR');
+        });
+    });
 }
 
 // Regenerar todos los QR
