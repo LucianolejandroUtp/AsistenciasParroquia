@@ -125,6 +125,16 @@ Route::middleware(['auth.custom'])->group(function () {
         // Vistas principales de estudiantes (todos los usuarios autenticados)
         Route::get('/', [StudentController::class, 'index'])->name('index');
         Route::get('/qr-codes', [StudentController::class, 'qrCodes'])->name('qr-codes');
+        
+        // Funcionalidades de códigos QR (Admin y Profesor)
+        Route::middleware(['role:Admin,Profesor'])->group(function () {
+            Route::get('/{student}/qr-download-png', [StudentController::class, 'downloadQrPng'])->name('qr.download.png');
+            Route::get('/{student}/qr-download-pdf', [StudentController::class, 'downloadQrPdf'])->name('qr.download.pdf');
+            Route::post('/{student}/qr-regenerate', [StudentController::class, 'regenerateQr'])->name('qr.regenerate');
+            Route::get('/qr-download-all', [StudentController::class, 'downloadAllQr'])->name('qr.download.all');
+            Route::post('/qr-regenerate-all', [StudentController::class, 'regenerateAllQr'])->name('qr.regenerate.all');
+            Route::get('/qr-print-layout', [StudentController::class, 'printLayout'])->name('qr.print.layout');
+        });
     });
     
     // =====================================================================
