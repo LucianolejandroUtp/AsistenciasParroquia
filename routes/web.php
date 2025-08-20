@@ -109,6 +109,8 @@ Route::middleware(['auth.custom'])->group(function () {
             Route::put('/{session}', [AttendanceSessionController::class, 'update'])->name('update');
             Route::delete('/{session}', [AttendanceSessionController::class, 'destroy'])->name('destroy');
             Route::get('/{session}/duplicate', [AttendanceSessionController::class, 'duplicate'])->name('duplicate');
+            Route::post('/{session}/close', [AttendanceSessionController::class, 'close'])->name('close');
+            Route::post('/{session}/reopen', [AttendanceSessionController::class, 'reopen'])->name('reopen');
         });
         
         // API para calendario
