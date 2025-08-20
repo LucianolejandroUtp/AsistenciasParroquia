@@ -142,7 +142,9 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($session->isFuture())
+                                        @if($session->isClosed())
+                                            <span class="badge bg-danger">Cerrada</span>
+                                        @elseif($session->isFuture())
                                             <span class="badge bg-info">Programada</span>
                                         @elseif($session->isToday())
                                             <span class="badge bg-warning">En curso</span>
@@ -167,6 +169,23 @@
                                                    class="btn btn-outline-info" data-bs-toggle="tooltip" title="Duplicar">
                                                     <i class="fe fe-copy"></i>
                                                 </a>
+                                                @if($session->canBeClosed())
+                                                <button type="button" class="btn btn-outline-secondary" 
+                                                        data-bs-toggle="tooltip" title="Cerrar sesión"
+                                                        data-session-id="{{ $session->id }}" 
+                                                        data-session-title="{{ $session->display_title }}"
+                                                        onclick="confirmClose(this.dataset.sessionId, this.dataset.sessionTitle)">
+                                                    <i class="fe fe-lock"></i>
+                                                </button>
+                                                @elseif($session->canBeReopened())
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        data-bs-toggle="tooltip" title="Reabrir sesión"
+                                                        data-session-id="{{ $session->id }}" 
+                                                        data-session-title="{{ $session->display_title }}"
+                                                        onclick="confirmReopen(this.dataset.sessionId, this.dataset.sessionTitle)">
+                                                    <i class="fe fe-unlock"></i>
+                                                </button>
+                                                @endif
                                             @endcan
                                             @can('delete', $session)
                                                 @if($session->canBeDeleted())
@@ -243,6 +262,58 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Confirmación para Cerrar Sesión -->
+<div class="modal fade" id="closeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Cierre de Sesión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas cerrar la sesión "<span id="closeSessionTitle"></span>"?</p>
+                <div class="alert alert-warning">
+                    <i class="fe fe-alert-triangle me-2"></i>
+                    Una vez cerrada, no se podrán registrar más asistencias para esta sesión.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="closeForm" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-warning">Cerrar Sesión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Reabrir Sesión -->
+<div class="modal fade" id="reopenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Reapertura de Sesión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas reabrir la sesión "<span id="reopenSessionTitle"></span>"?</p>
+                <div class="alert alert-info">
+                    <i class="fe fe-info me-2"></i>
+                    La sesión se reactivará y se podrán registrar asistencias nuevamente.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="reopenForm" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-success">Reabrir Sesión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -309,6 +380,18 @@ function confirmDelete(sessionId, sessionTitle) {
     document.getElementById('sessionTitle').textContent = sessionTitle;
     document.getElementById('deleteForm').action = `/sessions/${sessionId}`;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function confirmClose(sessionId, sessionTitle) {
+    document.getElementById('closeSessionTitle').textContent = sessionTitle;
+    document.getElementById('closeForm').action = `/sessions/${sessionId}/close`;
+    new bootstrap.Modal(document.getElementById('closeModal')).show();
+}
+
+function confirmReopen(sessionId, sessionTitle) {
+    document.getElementById('reopenSessionTitle').textContent = sessionTitle;
+    document.getElementById('reopenForm').action = `/sessions/${sessionId}/reopen`;
+    new bootstrap.Modal(document.getElementById('reopenModal')).show();
 }
 </script>
 @endpush

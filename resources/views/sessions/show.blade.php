@@ -36,7 +36,9 @@
                     <div class="col-sm-5 fw-semibold">Fecha:</div>
                     <div class="col-sm-7">
                         <span class="badge bg-primary">{{ $session->date->format('d/m/Y') }}</span>
-                        @if($session->isToday())
+                        @if($session->isClosed())
+                            <span class="badge bg-danger ms-1">CERRADA</span>
+                        @elseif($session->isToday())
                             <span class="badge bg-warning ms-1">HOY</span>
                         @elseif($session->isFuture())
                             <span class="badge bg-info ms-1">PROGRAMADA</span>
@@ -92,19 +94,30 @@
                 <div class="btn-group w-100">
                     @can('update', $session)
                         @if(!$session->isPast() || $session->isToday())
-                        <a href="{{ route('sessions.edit', $session) }}" class="btn btn-outline-warning">
-                            <i class="fe fe-edit me-1"></i>Editar
+                        <a href="{{ route('sessions.edit', $session) }}" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Editar">
+                            <i class="fe fe-edit"></i>
                         </a>
                         @endif
-                        <a href="{{ route('sessions.duplicate', $session) }}" class="btn btn-outline-info">
-                            <i class="fe fe-copy me-1"></i>Duplicar
+                        <a href="{{ route('sessions.duplicate', $session) }}" class="btn btn-outline-info" data-bs-toggle="tooltip" title="Duplicar">
+                            <i class="fe fe-copy"></i>
                         </a>
+                        @if($session->canBeClosed())
+                        <button type="button" class="btn btn-outline-secondary" 
+                                onclick="confirmClose()" data-bs-toggle="tooltip" title="Cerrar sesión">
+                            <i class="fe fe-lock"></i>
+                        </button>
+                        @elseif($session->canBeReopened())
+                        <button type="button" class="btn btn-outline-success" 
+                                onclick="confirmReopen()" data-bs-toggle="tooltip" title="Reabrir sesión">
+                            <i class="fe fe-unlock"></i>
+                        </button>
+                        @endif
                     @endcan
                     @can('delete', $session)
                         @if($session->canBeDeleted())
                         <button type="button" class="btn btn-outline-danger" 
-                                onclick="confirmDelete()">
-                            <i class="fe fe-trash-2 me-1"></i>Eliminar
+                                onclick="confirmDelete()" data-bs-toggle="tooltip" title="Eliminar sesión">
+                            <i class="fe fe-trash-2"></i>
                         </button>
                         @endif
                     @endcan
@@ -290,6 +303,58 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Confirmación para Cerrar Sesión -->
+<div class="modal fade" id="closeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Cierre de Sesión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas cerrar esta sesión?</p>
+                <div class="alert alert-warning">
+                    <i class="fe fe-alert-triangle me-2"></i>
+                    Una vez cerrada, no se podrán registrar más asistencias para esta sesión.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ route('sessions.close', $session) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-warning">Cerrar Sesión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Reabrir Sesión -->
+<div class="modal fade" id="reopenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Reapertura de Sesión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas reabrir esta sesión?</p>
+                <div class="alert alert-info">
+                    <i class="fe fe-info me-2"></i>
+                    La sesión se reactivará y se podrán registrar asistencias nuevamente.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ route('sessions.reopen', $session) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-success">Reabrir Sesión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -304,6 +369,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function confirmDelete() {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function confirmClose() {
+    new bootstrap.Modal(document.getElementById('closeModal')).show();
+}
+
+function confirmReopen() {
+    new bootstrap.Modal(document.getElementById('reopenModal')).show();
 }
 </script>
 @endpush
