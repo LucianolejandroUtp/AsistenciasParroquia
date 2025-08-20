@@ -63,18 +63,35 @@ class StudentController extends Controller
     $perPage = $request->get('per_page', 20); // 20 por defecto
         $page = $request->get('page', 1);
         
-        // Obtener datos reales de estudiantes con códigos QR
-        $qrCodes = Student::with('group')
-            ->where('estado', 'ACTIVO')
-            ->orderBy('names')
-            ->paginate($perPage);
+        // Construir query y aplicar filtros (grupo y búsqueda global)
+        $query = Student::with('group')
+            ->where('estado', 'ACTIVO');
+
+        // Filtrar por grupo si se proporciona
+        if ($request->filled('group')) {
+            $query->where('group_id', $request->input('group'));
+        }
+
+        // Búsqueda global: nombres, apellidos, código QR y código de estudiante
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where(function ($sub) use ($q) {
+                $sub->where('names', 'like', "%{$q}%")
+                    ->orWhere('paternal_surname', 'like', "%{$q}%")
+                    ->orWhere('maternal_surname', 'like', "%{$q}%")
+                    ->orWhere('student_code', 'like', "%{$q}%");
+            });
+        }
+
+        // Ejecutar paginación y mantener query string para links
+        $qrCodes = $query->orderBy('names')->paginate($perPage)->withQueryString();
 
         // Mapear datos para la vista
         $qrCodes->getCollection()->transform(function ($student) {
             return (object) [
                 'id' => $student->id,
                 'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
-                'qr_code' => $student->qr_code,
+                'qr_code' => $student->student_code,
                 'group_name' => $student->group ? $student->group->name : 'Sin Grupo',
                 'last_scanned' => $student->updated_at->format('Y-m-d H:i:s'),
                 'total_scans' => rand(5, 15) // Mock temporal para total_scans

@@ -113,6 +113,40 @@
             max-width: none !important;
         }
     }
+
+    /* Utility to ensure icon-only buttons center their icon both vertically and horizontally */
+    .btn-icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        /* Avoid compressing icon vertically: keep normal line-height */
+        line-height: normal !important;
+        vertical-align: middle !important;
+        /* Ensure a square clickable area so icons don't look squeezed */
+        min-width: 36px !important;
+        min-height: 32px !important;
+        padding-left: .5rem !important;
+        padding-right: .5rem !important;
+    }
+
+    .btn-icon .fe {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        /* Let the icon keep its natural height and not collapse */
+        line-height: 1 !important;
+        font-size: inherit !important;
+        vertical-align: middle !important;
+    }
+
+    /* Slightly tighten small button paddings to keep icons visually centered */
+    .btn-icon.btn-sm {
+        padding-left: .45rem !important;
+        padding-right: .45rem !important;
+        min-width: 32px !important;
+        min-height: 28px !important;
+    }
 </style>
 @endsection
 
@@ -183,39 +217,52 @@
 
 <!-- Filtros y Acciones -->
 <div class="row mb-3">
-    <div class="col-md-4">
-        <div class="form-group">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar código QR...">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button">
-                        <span class="fe fe-search"></span>
+    <div class="col-12">
+        <form method="GET" action="{{ route('students.qr-codes') }}">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="form-group mb-0">
+                        <div class="input-group">
+                            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Buscar código QR...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <span class="fe fe-search"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    @php
+                        $groups = App\Models\Group::orderBy('name')->get();
+                    @endphp
+                    <div class="form-group mb-0">
+                        <select class="form-control" name="group" onchange="this.form.submit()">
+                            <option value="">Grupos</option>
+                            @foreach($groups as $group)
+                                <option value="{{ $group->id }}" {{ request('group') == $group->id ? 'selected' : '' }}>{{ $group->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-6 d-flex justify-content-end flex-wrap">
+                    <a href="{{ route('students.qr-codes') }}" class="btn btn-outline-secondary btn-icon mr-2 mb-2" title="Limpiar filtros" aria-label="Limpiar filtros">
+                        <span class="fe fe-x-circle fe-16"></span>
+                    </a>
+                    <button class="btn btn-success btn-icon mr-2 mb-2" type="button" onclick="regenerateAllQR()" title="Regenerar todos" aria-label="Regenerar todos">
+                        <span class="fe fe-refresh-cw fe-16"></span>
+                    </button>
+                    <button class="btn btn-primary btn-icon mr-2 mb-2" type="button" onclick="downloadAllQR()" title="Descargar todos" aria-label="Descargar todos">
+                        <span class="fe fe-download fe-16"></span>
+                    </button>
+                    <button class="btn btn-outline-primary btn-icon mb-2" type="button" onclick="window.print()" title="Imprimir" aria-label="Imprimir">
+                        <span class="fe fe-printer fe-16"></span>
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <select class="form-control">
-            <option value="">Todos los grupos</option>
-            @php
-                $groups = App\Models\Group::orderBy('name')->get();
-            @endphp
-            @foreach($groups as $group)
-                <option value="{{ $group->id }}">{{ $group->name }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-6 text-right">
-        <button class="btn btn-success" type="button" onclick="regenerateAllQR()">
-            <span class="fe fe-refresh-cw fe-12 mr-2"></span>Regenerar Todos
-        </button>
-        <button class="btn btn-primary" type="button" onclick="downloadAllQR()">
-            <span class="fe fe-download fe-12 mr-2"></span>Descargar Todos
-        </button>
-        <button class="btn btn-outline-primary" type="button" onclick="window.print()">
-            <span class="fe fe-printer fe-12 mr-2"></span>Imprimir
-        </button>
+        </form>
     </div>
 </div>
 
@@ -275,15 +322,15 @@
                 </div>
                 <div class="card-footer text-center no-print">
                     <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-primary" title="Descargar PNG" 
+                        <button class="btn btn-sm btn-outline-primary btn-icon" title="Descargar PNG" 
                                 onclick="downloadQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-download fe-12"></span>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" title="Regenerar QR" 
+                        <button class="btn btn-sm btn-outline-secondary btn-icon" title="Regenerar QR" 
                                 onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-refresh-cw fe-12"></span>
                         </button>
-                        <button class="btn btn-sm btn-outline-info" title="Imprimir Individual" 
+                        <button class="btn btn-sm btn-outline-info btn-icon" title="Imprimir Individual" 
                                 onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-printer fe-12"></span>
                         </button>
@@ -615,25 +662,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Eliminado: Alternancia de vista (solo queda cuadrícula)
     
-    // Funcionalidad de búsqueda
-    const searchInput = document.querySelector('input[placeholder="Buscar código QR..."]');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const qrCards = document.querySelectorAll('.qr-card');
-            
-            qrCards.forEach(card => {
-                const studentName = card.querySelector('h6').textContent.toLowerCase();
-                const qrCode = card.querySelector('code').textContent.toLowerCase();
-                
-                if (studentName.includes(searchTerm) || qrCode.includes(searchTerm)) {
-                    card.parentElement.style.display = 'block';
-                } else {
-                    card.parentElement.style.display = 'none';
-                }
-            });
-        });
-    }
+    // Nota: La búsqueda se realiza server-side a través del formulario GET.
+    // Se eliminó el listener de búsqueda en cliente para evitar filtrar solo los elementos visibles en la página.
 });
 </script>
 @endsection
