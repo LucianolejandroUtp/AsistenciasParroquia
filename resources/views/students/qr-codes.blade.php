@@ -12,14 +12,37 @@
 
 @section('additional-css')
 <style>
-.qr-code-display {
+    /* Minimal QR styles only — pagination uses template classes (TinyDash/Bootstrap) */
+    .qr-code-display {
     min-height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #f8f9fa;
-    border: 2px dashed #dee2e6;
+    border: 2px solid #e9ecef;
     border-radius: 8px;
+    position: relative;
+}
+
+.qr-canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.qr-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #6c757d;
+}
+
+.qr-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 1rem;
 }
 
 .qr-card {
@@ -34,7 +57,62 @@
 @media print {
     .no-print { display: none !important; }
     .qr-card { break-inside: avoid; }
+    .qr-canvas { max-width: 150px !important; }
 }
+
+    /* No más reglas globales de paginación aquí: usar las clases del template TinyDash/Bootstrap */
+    
+    /* Ensure pagination renders in one line on desktop (Tailwind 'sm' breakpoint ~640px) */
+    @media (min-width: 640px) {
+        nav[aria-label="Pagination Navigation"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: nowrap !important;
+            gap: 12px !important;
+            white-space: nowrap !important;
+        }
+
+        /* Make each direct child render inline and avoid wrapping */
+        nav[aria-label="Pagination Navigation"] > * {
+            display: inline-flex !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            vertical-align: middle !important;
+        }
+
+        /* The typical Laravel paginator puts page buttons inside a relative.inline-flex group */
+        nav[aria-label="Pagination Navigation"] .relative.inline-flex,
+        nav[aria-label="Pagination Navigation"] .relative.z-0.inline-flex {
+            display: inline-flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+        }
+
+        /* Reduce padding slightly on page buttons to help fit one line */
+        nav[aria-label="Pagination Navigation"] a.relative.inline-flex.items-center,
+        nav[aria-label="Pagination Navigation"] span.relative.inline-flex.items-center,
+        nav[aria-label="Pagination Navigation"] .page-link {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+
+        /* Avoid page number list expanding to full width */
+        nav[aria-label="Pagination Navigation"] ul,
+        nav[aria-label="Pagination Navigation"] .pagination {
+            display: inline-flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+        }
+
+        /* Prevent elements with classes like `sm:flex-1` from growing to full width inside the pagination */
+        nav[aria-label="Pagination Navigation"] [class*="sm:flex-1"],
+        nav[aria-label="Pagination Navigation"] [class*="sm:flex\-1"] {
+            flex: 0 0 auto !important;
+            max-width: none !important;
+        }
+    }
 </style>
 @endsection
 
@@ -129,11 +207,11 @@
         </select>
     </div>
     <div class="col-md-6 text-right">
-        <button class="btn btn-success" type="button">
+        <button class="btn btn-success" type="button" onclick="regenerateAllQR()">
             <span class="fe fe-refresh-cw fe-12 mr-2"></span>Regenerar Todos
         </button>
-        <button class="btn btn-primary" type="button">
-            <span class="fe fe-download fe-12 mr-2"></span>Descargar PDF
+        <button class="btn btn-primary" type="button" onclick="downloadAllQR()">
+            <span class="fe fe-download fe-12 mr-2"></span>Descargar Todos
         </button>
         <button class="btn btn-outline-primary" type="button" onclick="window.print()">
             <span class="fe fe-printer fe-12 mr-2"></span>Imprimir
@@ -177,13 +255,18 @@
                     <small class="text-muted">{{ $qrCode->group_name }}</small>
                 </div>
                 <div class="card-body text-center">
-                    <!-- Placeholder para QR Code -->
-                    <div class="qr-code-display mb-3">
-                        <div class="text-center">
-                            <div class="mb-2" style="font-size: 64px; color: #dee2e6;">
-                                <span class="fe fe-qr-code"></span>
+                    <!-- QR Code Real -->
+                    <div class="qr-code-display mb-3" id="qr-container-{{ $qrCode->id }}">
+                        <div class="qr-loading" id="qr-loading-{{ $qrCode->id }}">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="sr-only">Generando QR...</span>
                             </div>
-                            <small class="text-muted">QR Code Placeholder</small>
+                            <div class="mt-2">Generando QR...</div>
+                        </div>
+                        <canvas id="qr-canvas-{{ $qrCode->id }}" class="qr-canvas" style="display: none;"></canvas>
+                        <div class="qr-error" id="qr-error-{{ $qrCode->id }}" style="display: none;">
+                            <i class="fe fe-alert-circle"></i>
+                            <div>Error al generar QR</div>
                         </div>
                     </div>
                     
@@ -204,13 +287,16 @@
                 </div>
                 <div class="card-footer text-center no-print">
                     <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-primary" title="Descargar">
+                        <button class="btn btn-sm btn-outline-primary" title="Descargar PNG" 
+                                onclick="downloadQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-download fe-12"></span>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" title="Regenerar">
+                        <button class="btn btn-sm btn-outline-secondary" title="Regenerar QR" 
+                                onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-refresh-cw fe-12"></span>
                         </button>
-                        <button class="btn btn-sm btn-outline-info" title="Imprimir Individual">
+                        <button class="btn btn-sm btn-outline-info" title="Imprimir Individual" 
+                                onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-printer fe-12"></span>
                         </button>
                     </div>
@@ -218,19 +304,39 @@
             </div>
         </div>
         @endforeach
-        
-        <!-- Más códigos QR (indicador) -->
-        <div class="col-md-4 col-lg-3 mb-4">
-            <div class="card border-dashed text-center" style="border-style: dashed; border-color: #dee2e6;">
-                <div class="card-body d-flex flex-column justify-content-center" style="min-height: 300px;">
-                    <span class="fe fe-plus fe-32 text-muted mb-2"></span>
-                    <h6 class="text-muted">Ver Más Códigos</h6>
-                    <small class="text-muted">+75 códigos adicionales</small>
-                    <button class="btn btn-outline-primary btn-sm mt-2">
-                        Cargar Más
-                    </button>
-                </div>
+    </div>
+    
+    <!-- Paginación (usando markup del template TinyDash/Bootstrap) -->
+    <div class="row">
+        <div class="col-12 d-flex align-items-center">
+            <div class="mr-auto small text-muted">
+                Mostrando {{ $qrCodes->firstItem() }} a {{ $qrCodes->lastItem() }} de {{ $qrCodes->total() }} registros
             </div>
+
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-end mb-0">
+                    {{-- Previous --}}
+                    <li class="page-item {{ $qrCodes->onFirstPage() ? 'disabled' : '' }}">
+                        <a class="page-link" href="{{ $qrCodes->previousPageUrl() ?: '#' }}">&laquo; Anterior</a>
+                    </li>
+
+                    {{-- Page links (simple window) --}}
+                    @php
+                        $start = max(1, $qrCodes->currentPage() - 2);
+                        $end = min($qrCodes->lastPage(), $qrCodes->currentPage() + 2);
+                    @endphp
+                    @for ($i = $start; $i <= $end; $i++)
+                        <li class="page-item {{ $qrCodes->currentPage() === $i ? 'active' : '' }}">
+                            <a class="page-link" href="{{ $qrCodes->url($i) }}">{{ $i }}</a>
+                        </li>
+                    @endfor
+
+                    {{-- Next --}}
+                    <li class="page-item {{ $qrCodes->hasMorePages() ? '' : 'disabled' }}">
+                        <a class="page-link" href="{{ $qrCodes->nextPageUrl() ?: '#' }}">Siguiente &raquo;</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -289,18 +395,15 @@
                                         <span class="fe fe-more-vertical fe-12"></span>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="#">
-                                            <span class="fe fe-eye fe-12 mr-2"></span>Ver QR Grande
-                                        </a>
-                                        <a class="dropdown-item" href="#">
+                                        <a class="dropdown-item" href="#" onclick="downloadQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                                             <span class="fe fe-download fe-12 mr-2"></span>Descargar
                                         </a>
-                                        <a class="dropdown-item" href="#">
+                                        <a class="dropdown-item" href="#" onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                                             <span class="fe fe-refresh-cw fe-12 mr-2"></span>Regenerar
                                         </a>
                                         <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#">
-                                            <span class="fe fe-bar-chart-2 fe-12 mr-2"></span>Historial
+                                        <a class="dropdown-item" href="#" onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
+                                            <span class="fe fe-printer fe-12 mr-2"></span>Imprimir
                                         </a>
                                     </div>
                                 </div>
@@ -310,6 +413,9 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer">
+            {{ $qrCodes->links() }}
         </div>
     </div>
 </div>
@@ -350,51 +456,293 @@
 @endsection
 
 @section('additional-js')
+<!-- QRCode.js Library from CDNJS (más confiable) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+
 <script>
+// Control de paginación
+const QR_PER_PAGE = 12; // Mostrar 12 QR por página
+let currentPage = 1;
+let totalStudents = {{ $qrCodes->total() }};
+let totalPages = Math.ceil(totalStudents / QR_PER_PAGE);
+
+// Configuración QR Code
+const QR_CONFIG = {
+    errorCorrectionLevel: 'M', // Cambiar a M para mejor rendimiento
+    type: 'image/png',
+    quality: 0.92,
+    margin: 1, // Reducir margin
+    scale: 4,  // Reducir scale para mejor rendimiento
+    color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+    }
+};
+
+// Generar QR Code individual con fallback si QRCode no está disponible
+function generateQRCode(studentId, qrCodeText, delay = 0) {
+    setTimeout(() => {
+        const canvas = document.getElementById(`qr-canvas-${studentId}`);
+        const loading = document.getElementById(`qr-loading-${studentId}`);
+        const error = document.getElementById(`qr-error-${studentId}`);
+        
+        if (!canvas || !qrCodeText) {
+            showQRError(studentId);
+            return;
+        }
+        
+        // Verificar qué biblioteca está disponible
+        if (typeof QRCode !== 'undefined') {
+            // Usar QRCode.js (node-qrcode style)
+            QRCode.toCanvas(canvas, qrCodeText, QR_CONFIG, function (err) {
+                if (err) {
+                    console.error('Error generando QR para estudiante', studentId, ':', err);
+                    showQRError(studentId);
+                } else {
+                    showQRSuccess(studentId);
+                }
+            });
+        } else if (typeof qrcode !== 'undefined') {
+            // Usar qrcode-generator style
+            try {
+                const qr = qrcode(4, 'M');
+                qr.addData(qrCodeText);
+                qr.make();
+                
+                // Dibujar en canvas
+                const ctx = canvas.getContext('2d');
+                const size = 200;
+                canvas.width = size;
+                canvas.height = size;
+                
+                const cellSize = size / qr.getModuleCount();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, size, size);
+                ctx.fillStyle = '#000000';
+                
+                for (let row = 0; row < qr.getModuleCount(); row++) {
+                    for (let col = 0; col < qr.getModuleCount(); col++) {
+                        if (qr.isDark(row, col)) {
+                            ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                        }
+                    }
+                }
+                
+                showQRSuccess(studentId);
+            } catch (err) {
+                console.error('Error con qrcode-generator:', err);
+                showQRError(studentId);
+            }
+        } else {
+            // Fallback - mostrar texto
+            showQRFallback(studentId, qrCodeText);
+        }
+    }, delay);
+}
+
+// Mostrar éxito en generación QR
+function showQRSuccess(studentId) {
+    const loading = document.getElementById(`qr-loading-${studentId}`);
+    const canvas = document.getElementById(`qr-canvas-${studentId}`);
+    const error = document.getElementById(`qr-error-${studentId}`);
+    
+    if (loading) loading.style.display = 'none';
+    if (canvas) canvas.style.display = 'block';
+    if (error) error.style.display = 'none';
+    
+    console.log(`QR generado exitosamente para estudiante ${studentId}`);
+}
+
+// Fallback si no hay biblioteca disponible
+function showQRFallback(studentId, qrCodeText) {
+    const loading = document.getElementById(`qr-loading-${studentId}`);
+    const canvas = document.getElementById(`qr-canvas-${studentId}`);
+    const error = document.getElementById(`qr-error-${studentId}`);
+    
+    if (loading) loading.style.display = 'none';
+    if (canvas) canvas.style.display = 'none';
+    if (error) {
+        error.style.display = 'block';
+        error.innerHTML = `
+            <div style="text-align: center; padding: 20px; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">${qrCodeText}</div>
+                <small style="color: #6c757d;">Código QR (modo texto)</small>
+            </div>
+        `;
+    }
+}
+
+// Mostrar error en generación QR
+function showQRError(studentId) {
+    const loading = document.getElementById(`qr-loading-${studentId}`);
+    const canvas = document.getElementById(`qr-canvas-${studentId}`);
+    const error = document.getElementById(`qr-error-${studentId}`);
+    
+    if (loading) loading.style.display = 'none';
+    if (canvas) canvas.style.display = 'none';
+    if (error) error.style.display = 'block';
+}
+
+// Descargar QR como PNG
+function downloadQR(studentId, studentName) {
+    const canvas = document.getElementById(`qr-canvas-${studentId}`);
+    if (!canvas) return;
+    
+    // Crear enlace de descarga
+    const link = document.createElement('a');
+    link.download = `QR_${studentName.replace(/\s+/g, '_')}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+}
+
+// Regenerar QR (placeholder para funcionalidad futura)
+function regenerateQR(studentId, studentName) {
+    if (confirm(`¿Está seguro de regenerar el código QR de ${studentName}?`)) {
+        const loading = document.getElementById(`qr-loading-${studentId}`);
+        const canvas = document.getElementById(`qr-canvas-${studentId}`);
+        
+        // Mostrar loading
+        if (loading) loading.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        
+        // Simular regeneración (aquí iría llamada AJAX)
+        setTimeout(() => {
+            alert(`QR de ${studentName} regenerado exitosamente`);
+            // Recargar página o regenerar QR específico
+            location.reload();
+        }, 1500);
+    }
+}
+
+// Imprimir QR individual
+function printQR(studentId, studentName) {
+    const canvas = document.getElementById(`qr-canvas-${studentId}`);
+    if (!canvas) return;
+    
+    const printWindow = window.open('', '_blank');
+    const qrDataURL = canvas.toDataURL();
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>QR Code - ${studentName}</title>
+                <style>
+                    body { margin: 0; padding: 20px; text-align: center; font-family: Arial, sans-serif; }
+                    .qr-print { max-width: 300px; margin: 0 auto; }
+                    h2 { margin-top: 20px; color: #333; }
+                    .student-info { margin-top: 10px; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="qr-print">
+                    <img src="${qrDataURL}" style="width: 100%;" />
+                    <h2>${studentName}</h2>
+                    <div class="student-info">Primera Comunión</div>
+                </div>
+            </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+
+// Descargar todos los QR como ZIP
+function downloadAllQR() {
+    const canvases = document.querySelectorAll('.qr-canvas[style*="display: block"], .qr-canvas:not([style*="display: none"])');
+    if (canvases.length === 0) {
+        alert('No hay códigos QR generados para descargar');
+        return;
+    }
+
+    // Simulación de descarga masiva (requiere biblioteca ZIP.js)
+    alert(`Preparando descarga de ${canvases.length} códigos QR...`);
+    
+    // TODO: Implementar descarga real con ZIP.js
+    console.log('Descarga masiva de QR codes:', canvases.length);
+}
+
+// Regenerar todos los QR
+function regenerateAllQR() {
+    if (confirm('¿Está seguro de regenerar TODOS los códigos QR? Esta acción no se puede deshacer.')) {
+        const loadings = document.querySelectorAll('[id^="qr-loading-"]');
+        const canvases = document.querySelectorAll('[id^="qr-canvas-"]');
+        
+        // Mostrar loading en todos
+        loadings.forEach(loading => loading.style.display = 'block');
+        canvases.forEach(canvas => canvas.style.display = 'none');
+        
+        // Simular regeneración masiva
+        setTimeout(() => {
+            alert('Todos los códigos QR han sido regenerados exitosamente');
+            location.reload();
+        }, 2000);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar códigos QR progresivamente
+    function initializeQRCodes() {
+        console.log('Iniciando generación de códigos QR...');
+        
+        const studentData = [
+            @foreach($qrCodes as $index => $qrCode)
+                {id: {{ $qrCode->id }}, code: '{{ $qrCode->qr_code }}'},
+            @endforeach
+        ];
+        
+        studentData.forEach((student, index) => {
+            const delay = index * 200; // 200ms entre cada generación
+            generateQRCode(student.id, student.code, delay);
+        });
+    }
+    
+    // Esperar un poco para que se carguen las bibliotecas
+    setTimeout(initializeQRCodes, 100);
+    
     // Alternar entre vista de cuadrícula y lista
     const viewGrid = document.getElementById('view-grid');
     const viewList = document.getElementById('view-list');
     const gridView = document.getElementById('grid-view');
     const listView = document.getElementById('list-view');
     
-    viewGrid.addEventListener('click', function() {
-        gridView.style.display = 'block';
-        listView.style.display = 'none';
-        viewGrid.classList.add('active');
-        viewList.classList.remove('active');
-    });
-    
-    viewList.addEventListener('click', function() {
-        gridView.style.display = 'none';
-        listView.style.display = 'block';
-        viewList.classList.add('active');
-        viewGrid.classList.remove('active');
-    });
+    if (viewGrid && viewList && gridView && listView) {
+        viewGrid.addEventListener('click', function() {
+            gridView.style.display = 'block';
+            listView.style.display = 'none';
+            viewGrid.classList.add('active');
+            viewList.classList.remove('active');
+        });
+        
+        viewList.addEventListener('click', function() {
+            gridView.style.display = 'none';
+            listView.style.display = 'block';
+            viewList.classList.add('active');
+            viewGrid.classList.remove('active');
+        });
+    }
     
     // Funcionalidad de búsqueda
     const searchInput = document.querySelector('input[placeholder="Buscar código QR..."]');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
-            console.log('Buscando QR:', this.value);
+            const searchTerm = this.value.toLowerCase();
+            const qrCards = document.querySelectorAll('.qr-card');
+            
+            qrCards.forEach(card => {
+                const studentName = card.querySelector('h6').textContent.toLowerCase();
+                const qrCode = card.querySelector('code').textContent.toLowerCase();
+                
+                if (studentName.includes(searchTerm) || qrCode.includes(searchTerm)) {
+                    card.parentElement.style.display = 'block';
+                } else {
+                    card.parentElement.style.display = 'none';
+                }
+            });
         });
     }
-    
-    // Simulación de descarga de QR
-    document.querySelectorAll('button[title="Descargar"]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            alert('Funcionalidad de descarga de QR (próximamente)');
-        });
-    });
-    
-    // Simulación de regeneración de QR
-    document.querySelectorAll('button[title="Regenerar"]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (confirm('¿Está seguro de regenerar este código QR?')) {
-                alert('QR regenerado exitosamente');
-            }
-        });
-    });
 });
 </script>
 @endsection
