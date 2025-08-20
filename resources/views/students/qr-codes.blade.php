@@ -228,7 +228,18 @@
         <div class="col-md-4 col-lg-3 mb-4">
             <div class="card qr-card">
                 <div class="card-header text-center">
-                    <h6 class="mb-0">{{ $qrCode->full_name }}</h6>
+                    @php
+                        $parts = preg_split('/\s+/', trim($qrCode->full_name));
+                        $first = $parts[0] ?? '';
+                        $surnames = '';
+                        if (count($parts) >= 3) {
+                            $surnames = $parts[count($parts) - 2] . ' ' . $parts[count($parts) - 1];
+                        } elseif (count($parts) == 2) {
+                            $surnames = $parts[1];
+                        }
+                        $displayName = trim($first . ($surnames ? ' ' . $surnames : ''));
+                    @endphp
+                    <h6 class="mb-0">{{ $displayName }}</h6>
                     <small class="text-muted">{{ $qrCode->group_name }}</small>
                 </div>
                 <div class="card-body text-center">
