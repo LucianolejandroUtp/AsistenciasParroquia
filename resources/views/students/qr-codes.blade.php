@@ -361,7 +361,7 @@
 
 <script>
 // Control de paginación
-const QR_PER_PAGE = 12; // Mostrar 12 QR por página
+const QR_PER_PAGE = 20; // Mostrar 20 QR por página
 let currentPage = 1;
 let totalStudents = {{ $qrCodes->total() }};
 let totalPages = Math.ceil(totalStudents / QR_PER_PAGE);

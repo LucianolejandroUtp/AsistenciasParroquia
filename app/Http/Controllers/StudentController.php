@@ -60,7 +60,7 @@ class StudentController extends Controller
     public function qrCodes(Request $request)
     {
         // Parámetros de paginación
-        $perPage = $request->get('per_page', 12); // 12 por defecto
+    $perPage = $request->get('per_page', 20); // 20 por defecto
         $page = $request->get('page', 1);
         
         // Obtener datos reales de estudiantes con códigos QR
