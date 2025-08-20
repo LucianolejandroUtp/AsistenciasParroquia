@@ -257,8 +257,9 @@
                     <button class="btn btn-primary btn-icon mr-2 mb-2" type="button" onclick="downloadAllQR()" title="Descargar todos" aria-label="Descargar todos">
                         <span class="fe fe-download fe-16"></span>
                     </button>
-                    <button class="btn btn-outline-primary btn-icon mb-2" type="button" onclick="window.print()" title="Imprimir" aria-label="Imprimir">
-                        <span class="fe fe-printer fe-16"></span>
+                    <button id="btn-print-all" class="btn btn-outline-primary btn-icon mb-2" type="button" onclick="printAllQR()" title="Imprimir" aria-label="Imprimir">
+                        <span id="btn-print-icon" class="fe fe-printer fe-16"></span>
+                        <span id="btn-print-spinner" class="spinner-border spinner-border-sm text-primary ml-2" role="status" style="display: none; width: 1rem; height: 1rem;" aria-hidden="true"></span>
                     </button>
                 </div>
             </div>
@@ -659,6 +660,130 @@ function downloadAllQR() {
             alert('Error al generar el ZIP de códigos QR');
         });
     });
+}
+
+// Imprimir todos los QR visibles en una vista optimizada para impresión
+function printAllQR() {
+    const btn = document.getElementById('btn-print-all');
+    const spinner = document.getElementById('btn-print-spinner');
+    const icon = document.getElementById('btn-print-icon');
+
+    const canvases = Array.from(document.querySelectorAll('.qr-canvas')).filter(c => c && c.style.display !== 'none' && c.width > 0);
+    if (canvases.length === 0) {
+        alert('No hay códigos QR generados para imprimir');
+        return;
+    }
+
+    // Deshabilitar botón y mostrar spinner
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.style.display = 'inline-block';
+    if (icon) icon.style.display = 'none';
+
+    // Construir HTML para la ventana de impresión
+    let html = `
+        <!doctype html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Imprimir Códigos QR</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 10mm; }
+                .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+                @media print { .grid { grid-template-columns: repeat(4, 1fr); } }
+                .card { text-align: center; padding: 8px; border: 1px solid #e9ecef; border-radius: 6px; }
+                .card img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                .meta { margin-top: 6px; font-size: 12px; color: #333; }
+                .code { font-family: monospace; font-size: 11px; color: #555; }
+                @media print {
+                    .no-print { display: none !important; }
+                    .card { page-break-inside: avoid; }
+                    body { margin: 6mm; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="grid">
+    `;
+
+    // Añadir cada canvas como imagen dataURL
+    canvases.forEach((canvas) => {
+        try {
+            const dataURL = canvas.toDataURL();
+            const name = canvas.dataset.name || canvas.id;
+            const code = canvas.dataset.code || canvas.id;
+            html += `
+                <div class="card">
+                    <img src="${dataURL}" alt="QR ${code}" />
+                    <div class="meta">${name}</div>
+                </div>
+            `;
+        } catch (err) {
+            console.error('Error obteniendo dataURL del canvas', err);
+        }
+    });
+
+    html += `</div></body></html>`;
+
+    // Abrir ventana de impresión
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('La ventana de impresión fue bloqueada por el navegador. Permite popups para continuar.');
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+        if (icon) icon.style.display = 'inline-block';
+        return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    // Esperar a que todas las imágenes carguen en la nueva ventana
+    const imgs = printWindow.document.querySelectorAll('img');
+    let loaded = 0;
+    const total = imgs.length;
+
+    if (total === 0) {
+        // No hay imágenes, lanza print inmediatamente
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+        if (icon) icon.style.display = 'inline-block';
+        return;
+    }
+
+    imgs.forEach(img => {
+        if (img.complete) {
+            loaded++;
+            if (loaded === total) finishPrint();
+        } else {
+            img.addEventListener('load', () => {
+                loaded++;
+                if (loaded === total) finishPrint();
+            });
+            img.addEventListener('error', () => {
+                loaded++;
+                if (loaded === total) finishPrint();
+            });
+        }
+    });
+
+    function finishPrint() {
+        try {
+            printWindow.focus();
+            printWindow.print();
+            // No cierro automáticamente: algunos navegadores bloquean el cierre inmediato
+            // printWindow.close();
+        } catch (err) {
+            console.error('Error durante print()', err);
+        } finally {
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.style.display = 'none';
+            if (icon) icon.style.display = 'inline-block';
+        }
+    }
 }
 
 // Regenerar todos los QR
