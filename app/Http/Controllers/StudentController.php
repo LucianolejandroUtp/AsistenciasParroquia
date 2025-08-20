@@ -57,29 +57,33 @@ class StudentController extends Controller
     /**
      * Mostrar códigos QR de estudiantes.
      */
-    public function qrCodes()
+    public function qrCodes(Request $request)
     {
+        // Parámetros de paginación
+        $perPage = $request->get('per_page', 12); // 12 por defecto
+        $page = $request->get('page', 1);
+        
         // Obtener datos reales de estudiantes con códigos QR
         $qrCodes = Student::with('group')
             ->where('estado', 'ACTIVO')
             ->orderBy('names')
-            ->take(10) // Mostrar solo los primeros 10 para demo
-            ->get()
-            ->map(function ($student) {
-                return (object) [
-                    'id' => $student->id,
-                    'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
-                    'qr_code' => $student->qr_code,
-                    'group_name' => $student->group ? $student->group->name : 'Sin Grupo',
-                    'qr_svg' => '<svg>...</svg>', // Placeholder para QR generado
-                    'last_scanned' => $student->updated_at->format('Y-m-d H:i:s'),
-                    'total_scans' => rand(5, 15) // Mock temporal para total_scans
-                ];
-            });
+            ->paginate($perPage);
+
+        // Mapear datos para la vista
+        $qrCodes->getCollection()->transform(function ($student) {
+            return (object) [
+                'id' => $student->id,
+                'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
+                'qr_code' => $student->qr_code,
+                'group_name' => $student->group ? $student->group->name : 'Sin Grupo',
+                'last_scanned' => $student->updated_at->format('Y-m-d H:i:s'),
+                'total_scans' => rand(5, 15) // Mock temporal para total_scans
+            ];
+        });
 
         $qrStats = (object) [
-            'total_codes' => 78,
-            'active_codes' => 76,
+            'total_codes' => Student::where('estado', 'ACTIVO')->count(),
+            'active_codes' => Student::where('estado', 'ACTIVO')->count(),
             'total_scans_today' => 45,
             'last_generated' => '2025-08-10 09:00:00'
         ];
