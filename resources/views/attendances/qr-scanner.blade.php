@@ -814,7 +814,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (finishBtn) {
         finishBtn.addEventListener('click', function() {
             if (confirm('¿Finalizar la sesión actual? No podrá registrar más asistencias.')) {
-                showToast('Funcionalidad será implementada próximamente', 'info');
+                // Crear un formulario para cerrar la sesión
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("sessions.close", $selectedSession->id ?? "") }}';
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+                
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     }
