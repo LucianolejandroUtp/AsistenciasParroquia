@@ -285,4 +285,75 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Filtros dinámicos activados: Grupo, Estado, Asistencia');
 });
 </script>
+<script>
+// Exportar CSV de filas visibles (excluye columna de acciones)
+document.addEventListener('DOMContentLoaded', function() {
+    function downloadCSV(filename, csvContent) {
+        // Añadir BOM para compatibilidad con Excel (UTF-8)
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function rowToCsv(fields) {
+        return fields.map(function(field) {
+            if (field === null || typeof field === 'undefined') return '';
+            const str = String(field);
+            // Escapar comillas dobles
+            if (str.indexOf(',') !== -1 || str.indexOf('"') !== -1 || str.indexOf('\n') !== -1) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }).join(',');
+    }
+
+    document.getElementById('exportListBtn').addEventListener('click', function() {
+        try {
+            const table = $('#studentsDataTable').DataTable();
+            const rows = table.rows({ search: 'applied' }).data().toArray();
+
+            if (!rows || rows.length === 0) {
+                alert('No hay registros visibles para exportar.');
+                return;
+            }
+
+            // Definir encabezados (excluir Acciones)
+            const headers = ['Orden', 'Nombre Completo', 'Grupo', 'Asistencia', 'Estado', 'Registro'];
+            const csvRows = [rowToCsv(headers)];
+
+            rows.forEach(function(row) {
+                // row es un array de celdas en HTML; extraer texto según índice
+                // Columnas: 0 Orden, 1 Nombre, 2 Grupo, 3 Asistencia, 4 Estado, 5 Registro, 6 Acciones
+                const getText = function(cell) {
+                    // Crear elemento temporal para limpiar HTML
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = cell;
+                    return tmp.textContent.trim().replace(/\s+/g, ' ');
+                };
+
+                const orden = getText(row[0]);
+                const nombre = getText(row[1]);
+                const grupo = getText(row[2]);
+                const asistencia = getText(row[3]);
+                const estado = getText(row[4]);
+                const registro = getText(row[5]);
+
+                csvRows.push(rowToCsv([orden, nombre, grupo, asistencia, estado, registro]));
+            });
+
+            const csvContent = csvRows.join('\n');
+            const filename = 'students_export_' + new Date().toISOString().slice(0,10) + '.csv';
+            downloadCSV(filename, csvContent);
+        } catch (err) {
+            console.error('Error exportando CSV:', err);
+            alert('Ocurrió un error al exportar. Revisa la consola para más detalles.');
+        }
+    });
+});
+</script>
 @endsection
