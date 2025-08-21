@@ -79,8 +79,6 @@
                         <td>
                             <div>
                                 <strong>{{ $student->full_name }}</strong>
-                                <br>
-                                <small class="text-muted">{{ $student->names }} {{ $student->paternal_surname }}</small>
                             </div>
                         </td>
                         <td>
