@@ -139,4 +139,62 @@ class StudentController extends Controller
         // Fallback: redirigir a la vista completa (o mostrar una página simple)
         return redirect()->route('students.index');
     }
+
+    /**
+     * Devuelve partial con el formulario de edición (AJAX)
+     */
+    public function edit(Request $request, Student $student)
+    {
+        // Mapear a objeto simple para la vista
+        $dto = (object) [
+            'id' => $student->id,
+            'names' => $student->names,
+            'paternal_surname' => $student->paternal_surname,
+            'maternal_surname' => $student->maternal_surname,
+            'group_id' => $student->group_id,
+            'order_number' => $student->order_number,
+            'student_code' => $student->student_code,
+            'status' => $student->estado,
+        ];
+
+        if ($request->ajax()) {
+            $groups = Group::orderBy('name')->get();
+            return view('students.partials._edit_form', ['student' => $dto, 'groups' => $groups]);
+        }
+
+        return redirect()->route('students.index');
+    }
+
+    /**
+     * Actualiza los datos del estudiante (PUT)
+     */
+    public function update(Request $request, Student $student)
+    {
+        // Validar campos; usar nombres exactos según migración
+        $data = $request->validate([
+            'names' => 'required|string|max:191',
+            'paternal_surname' => 'required|string|max:191',
+            'maternal_surname' => 'nullable|string|max:191',
+            'group_id' => 'nullable|exists:groups,id',
+            'order_number' => 'required|integer|min:1',
+            'student_code' => 'nullable|string|max:100|unique:students,student_code,' . $student->id,
+            'status' => 'required|in:ACTIVO,INACTIVO,ELIMINADO'
+        ]);
+
+        // Asignar y guardar
+        $student->names = $data['names'];
+        $student->paternal_surname = $data['paternal_surname'];
+        $student->maternal_surname = $data['maternal_surname'] ?? null;
+        $student->group_id = $data['group_id'] ?? null;
+        $student->order_number = $data['order_number'];
+        $student->student_code = $data['student_code'] ?? null;
+        $student->estado = $data['status'];
+        $student->save();
+
+        if ($request->ajax()) {
+            return response()->json(['message' => 'Estudiante actualizado correctamente', 'student_id' => $student->id]);
+        }
+
+        return redirect()->route('students.index')->with('success', 'Estudiante actualizado correctamente');
+    }
 }

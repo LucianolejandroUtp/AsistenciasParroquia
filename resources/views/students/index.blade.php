@@ -111,7 +111,7 @@
                                 <button type="button" class="btn btn-outline-primary btn-view-details" title="Ver Detalles" data-student-id="{{ $student->id }}">
                                     <span class="fe fe-eye fe-12"></span>
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" title="Editar">
+                                <button type="button" class="btn btn-outline-secondary btn-edit-student" title="Editar" data-student-id="{{ $student->id }}">
                                     <span class="fe fe-edit-2 fe-12"></span>
                                 </button>
                                 <button type="button" class="btn btn-outline-info" title="Ver QR">
@@ -293,15 +293,75 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    </div>
-        </div>
+    </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+        // Handler para botón Editar (AJAX: load form into modal)
+        $(document).on('click', '.btn-edit-student', function(e) {
+            e.preventDefault();
+            var id = $(this).data('student-id');
+            var url = '{{ url("/students") }}/' + id + '/edit';
+
+            var $modal = $('#globalAjaxModal');
+            var $body = $('#globalAjaxModalBody');
+            $modal.data('lastActive', this);
+
+            $body.html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div></div>');
+            $modal.find('.modal-title').text('Editar Estudiante');
+            $modal.modal('show');
+
+            $.get(url)
+                .done(function(html) {
+                    $body.html(html);
+
+                    // Interceptar submit del formulario para usar AJAX
+                    var $form = $body.find('#studentEditForm');
+                    $form.on('submit', function(ev) {
+                        ev.preventDefault();
+                        var action = $form.attr('action');
+                        var method = ($form.find('input[name=_method]').val() || 'POST').toUpperCase();
+                        var formData = $form.serialize();
+
+                        $.ajax({
+                            url: action,
+                            method: method,
+                            data: formData,
+                            success: function(resp) {
+                                // Mostrar notificación mínima y cerrar modal
+                                alert(resp.message || 'Guardado correctamente');
+                                $modal.modal('hide');
+                                // Recargar la página para reflejar cambios (puedes optimizar para actualizar la fila)
+                                window.location.reload();
+                            },
+                            error: function(xhr) {
+                                if (xhr.status === 422) {
+                                    // Errores de validación: mostrar mensajes
+                                    var errors = xhr.responseJSON.errors || {};
+                                    var errHtml = '<div class="alert alert-danger"><ul>';
+                                    Object.keys(errors).forEach(function(k) {
+                                        errors[k].forEach(function(msg) { errHtml += '<li>' + msg + '</li>'; });
+                                    });
+                                    errHtml += '</ul></div>';
+                                    $body.prepend(errHtml);
+                                } else {
+                                    alert('Ocurrió un error al guardar. Revisa la consola.');
+                                    console.error(xhr);
+                                }
+                            }
+                        });
+                    });
+                })
+                .fail(function(xhr) {
+                    var msg = 'Ocurrió un error al cargar el formulario de edición.';
+                    if (xhr.status === 403) msg = 'No tienes permiso para editar este recurso.';
+                    if (xhr.status === 404) msg = 'Estudiante no encontrado.';
+                    $body.html('<div class="alert alert-danger" role="alert">' + msg + '</div>');
+                });
+        });
+
         // Handler para botón Ver Detalles (AJAX)
         $(document).on('click', '.btn-view-details', function(e) {
                 e.preventDefault();
@@ -310,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 var $modal = $('#globalAjaxModal');
                 var $body = $('#globalAjaxModalBody');
+
                 // Guardar elemento que abrió el modal para restaurar foco al cerrarlo
                 $modal.data('lastActive', this);
 
