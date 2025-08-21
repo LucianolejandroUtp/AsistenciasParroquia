@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Group;
+use Illuminate\Support\Facades\Gate;
 
 class StudentController extends Controller
 {
@@ -207,5 +208,25 @@ class StudentController extends Controller
         }
 
         return redirect()->route('students.index')->with('success', 'Estudiante actualizado correctamente');
+    }
+
+    /**
+     * Mostrar partial con QR de un estudiante (para modal AJAX).
+     *
+     * Nota: no usar el nombre qrCodes/qrcodes para evitar colisiones con el método
+     * que devuelve la vista completa de códigos QR (qrCodes).
+     */
+    public function showQrModal(Request $request, Student $student)
+    {
+    // Autorizar usando policy existente (reusar 'view' si aplica)
+    Gate::authorize('view', $student);
+
+        // Si se solicita vía AJAX, devolver la vista parcial con el estudiante
+        if ($request->ajax()) {
+            return view('students.partials._qrcodes', ['student' => $student]);
+        }
+
+        // Fallback: redirigir a la lista de estudiantes
+        return redirect()->route('students.index');
     }
 }

@@ -114,12 +114,13 @@
                                 <button type="button" class="btn btn-outline-secondary btn-edit-student" title="Editar" data-student-id="{{ $student->id }}">
                                     <span class="fe fe-edit-2 fe-12"></span>
                                 </button>
-                                <button type="button" class="btn btn-outline-info" title="Ver QR">
-                                    <span class="fe fe-qr-code fe-12"></span>
-                                </button>
-                                <button type="button" class="btn btn-outline-warning" title="Historial">
+                                    <button type="button" class="btn btn-outline-info btn-view-qr" title="Ver QR" data-url="{{ route('students.qr.modal', ['student' => $student->id]) }}">
+                                        <span class="fe fe-maximize fe-12"></span>
+                                    </button>
+                            <!--    <button type="button" class="btn btn-outline-warning" title="Historial">
                                     <span class="fe fe-bar-chart-2 fe-12"></span>
                                 </button>
+                                -->
                             </div>
                         </td>
                     </tr>
@@ -154,7 +155,50 @@
 @section('additional-js')
 <script src="{{ asset('tinydash/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('tinydash/js/dataTables.bootstrap4.min.js') }}"></script>
+<!-- Librerías necesarias para generación de QR y descargas (copiadas de la vista qr-codes) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="{{ asset('js/qr-utils.js') }}"></script>
 <script>
+// Modal container (global) - ensure exists
+if (!document.getElementById('ajaxGlobalModal')) {
+        const modalHtml = `
+        <div class="modal fade" id="ajaxGlobalModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ver Código QR</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body p-3">Cargando...</div>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Handler para botones Ver QR
+document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-view-qr');
+        if (!btn) return;
+        e.preventDefault();
+        const url = btn.getAttribute('data-url');
+        const $modal = $('#ajaxGlobalModal');
+        $modal.find('.modal-body').html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div></div>');
+        $modal.modal('show');
+
+        $.get(url)
+                .done(function (html) {
+                        $modal.find('.modal-body').html(html);
+                })
+                .fail(function () {
+                        $modal.find('.modal-body').html('<div class="text-danger">Error cargando el código QR. Intenta recargar la página.</div>');
+                });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar DataTables
     var table = $('#studentsDataTable').DataTable({
