@@ -107,4 +107,36 @@ class StudentController extends Controller
 
         return view('students.qr-codes', compact('qrCodes', 'qrStats'));
     }
+
+    /**
+     * Devuelve partial con detalles del estudiante (para peticiones AJAX)
+     */
+    public function details(Request $request, Student $student)
+    {
+        // Mapear a objeto simple igual que en index
+        $totalSessions = $student->attendances->pluck('attendanceSession')->unique('id')->count();
+        $attendedSessions = $student->attendances->count();
+        $attendancePercentage = $totalSessions > 0 ? round(($attendedSessions / $totalSessions) * 100) : 0;
+
+        $dto = (object) [
+            'id' => $student->id,
+            'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
+            'names' => $student->names,
+            'paternal_surname' => $student->paternal_surname,
+            'maternal_surname' => $student->maternal_surname,
+            'group_name' => $student->group ? $student->group->name : 'Sin Grupo',
+            'order_number' => $student->order_number,
+            'status' => $student->estado,
+            'total_sessions' => $totalSessions,
+            'attended_sessions' => $attendedSessions,
+            'attendance_percentage' => $attendancePercentage,
+        ];
+
+        if ($request->ajax()) {
+            return view('students.partials._details', ['student' => $dto]);
+        }
+
+        // Fallback: redirigir a la vista completa (o mostrar una página simple)
+        return redirect()->route('students.index');
+    }
 }

@@ -108,7 +108,7 @@
                         <!-- Columna 'Registro' removida -->
                         <td class="text-right">
                             <div class="btn-group btn-group-sm" role="group" aria-label="Acciones">
-                                <button type="button" class="btn btn-outline-primary" title="Ver Detalles">
+                                <button type="button" class="btn btn-outline-primary btn-view-details" title="Ver Detalles" data-student-id="{{ $student->id }}">
                                     <span class="fe fe-eye fe-12"></span>
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" title="Editar">
@@ -278,6 +278,57 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Filtros dinámicos activados: Grupo, Estado, Asistencia');
 });
 </script>
+<!-- Global modal container for AJAX-loaded content -->
+<div class="modal fade" id="globalAjaxModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detalle del Estudiante</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="globalAjaxModalBody">
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        // Handler para botón Ver Detalles (AJAX)
+        $(document).on('click', '.btn-view-details', function(e) {
+                e.preventDefault();
+                var id = $(this).data('student-id');
+                var url = '{{ url("/students") }}/' + id + '/details';
+
+                var $modal = $('#globalAjaxModal');
+                var $body = $('#globalAjaxModalBody');
+                // Guardar elemento que abrió el modal para restaurar foco al cerrarlo
+                $modal.data('lastActive', this);
+
+                $body.html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div></div>');
+                $modal.modal('show');
+
+                $.get(url)
+                        .done(function(html) {
+                                $body.html(html);
+                        })
+                        .fail(function(xhr) {
+                                var msg = 'Ocurrió un error al cargar los detalles.';
+                                if (xhr.status === 403) msg = 'No tienes permiso para ver este recurso.';
+                                if (xhr.status === 404) msg = 'Estudiante no encontrado.';
+                                $body.html('<div class="alert alert-danger" role="alert">' + msg + '</div>');
+                        });
+        });
+});
+</script>
 <script>
 // Exportar CSV de filas visibles (excluye columna de acciones)
 document.addEventListener('DOMContentLoaded', function() {
@@ -345,6 +396,38 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error exportando CSV:', err);
             alert('Ocurrió un error al exportar. Revisa la consola para más detalles.');
         }
+    });
+});
+</script>
+<script>
+// Modal focus management to avoid aria-hidden focus warnings
+document.addEventListener('DOMContentLoaded', function() {
+    var $globalModal = $('#globalAjaxModal');
+
+    $globalModal.on('shown.bs.modal', function () {
+        try {
+            // Enfocar el contenedor del body para que el foco esté dentro del modal
+            var $body = $(this).find('#globalAjaxModalBody');
+            $body.attr('tabindex', -1).focus();
+        } catch (e) {}
+    });
+
+    $globalModal.on('hide.bs.modal', function () {
+        try {
+            var active = document.activeElement;
+            if (active && this.contains(active)) {
+                // Desenfocar elementos activos dentro del modal
+                active.blur();
+            }
+        } catch (e) {}
+    });
+
+    $globalModal.on('hidden.bs.modal', function () {
+        var opener = $(this).data('lastActive');
+        if (opener && opener.focus) {
+            try { opener.focus(); } catch (e) {}
+        }
+        $(this).removeData('lastActive');
     });
 });
 </script>
