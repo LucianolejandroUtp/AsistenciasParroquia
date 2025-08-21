@@ -37,7 +37,7 @@
         <div class="row mb-3">
             <div class="col-md-3">
                 <select id="groupFilter" class="form-control form-control-sm">
-                    <option value="">Todos los grupos</option>
+                    <option value="">Grupos</option>
                     @foreach($groups as $group)
                         <option value="{{ $group->name }}">{{ $group->name }}</option>
                     @endforeach
@@ -45,14 +45,14 @@
             </div>
             <div class="col-md-3">
                 <select id="statusFilter" class="form-control form-control-sm">
-                    <option value="">Todos los estados</option>
+                    <option value="">Estados</option>
                     <option value="ACTIVO">Activo</option>
                     <option value="INACTIVO">Inactivo</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <select id="attendanceFilter" class="form-control form-control-sm">
-                    <option value="">Todos los niveles</option>
+                    <option value="">Niveles</option>
                     <option value="high">Alta (≥90%)</option>
                     <option value="medium">Media (70-89%)</option>
                     <option value="low">Baja (<70%)</option>
