@@ -35,7 +35,7 @@
                 <div class="row mb-3">
                     <div class="col-sm-5 fw-semibold">Fecha:</div>
                     <div class="col-sm-7">
-                        <span class="badge bg-primary">{{ $session->date->format('d/m/Y') }}</span>
+                        <span class="fw-semibold">{{ $session->date->locale('es')->isoFormat('DD MMM YYYY') }}</span>
                         @if($session->isClosed())
                             <span class="badge bg-danger ms-1">CERRADA</span>
                         @elseif($session->isToday())
