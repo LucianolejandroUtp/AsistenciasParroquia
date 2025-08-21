@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             data: formData,
                             success: function(resp) {
                                 // Mostrar notificación mínima y cerrar modal
-                                alert(resp.message || 'Guardado correctamente');
+                                showToast(resp.message || 'Guardado correctamente', 'success');
                                 $modal.modal('hide');
                                 // Recargar la página para reflejar cambios (puedes optimizar para actualizar la fila)
                                 window.location.reload();
@@ -346,8 +346,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     });
                                     errHtml += '</ul></div>';
                                     $body.prepend(errHtml);
-                                } else {
-                                    alert('Ocurrió un error al guardar. Revisa la consola.');
+                                    } else {
+                                    showToast('Ocurrió un error al guardar. Revisa la consola.', 'danger');
                                     console.error(xhr);
                                 }
                             }
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const rows = table.rows({ search: 'applied' }).data().toArray();
 
             if (!rows || rows.length === 0) {
-                alert('No hay registros visibles para exportar.');
+                showToast('No hay registros visibles para exportar.', 'warning');
                 return;
             }
 
@@ -455,12 +455,44 @@ document.addEventListener('DOMContentLoaded', function() {
             downloadCSV(filename, csvContent);
         } catch (err) {
             console.error('Error exportando CSV:', err);
-            alert('Ocurrió un error al exportar. Revisa la consola para más detalles.');
+            showToast('Ocurrió un error al exportar. Revisa la consola para más detalles.', 'danger');
         }
     });
 });
 </script>
+<!-- Toast container -->
+<div aria-live="polite" aria-atomic="true" style="position: fixed; top: 1rem; right: 1rem; z-index: 1080;">
+    <div id="globalToastContainer"></div>
+</div>
+
 <script>
+// Toast helper (Bootstrap 4)
+function showToast(message, type) {
+    type = type || 'info'; // info, success, warning, danger
+    var bg = 'bg-info';
+    if (type === 'success') bg = 'bg-success text-white';
+    if (type === 'warning') bg = 'bg-warning';
+    if (type === 'danger') bg = 'bg-danger text-white';
+
+    var id = 'toast-' + Date.now();
+    var html = '\n        <div id="' + id + '" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="4000">\n' +
+               '  <div class="toast-header ' + bg + '">\n' +
+               '    <strong class="mr-auto">Sistema</strong>\n' +
+               '    <small>ahora</small>\n' +
+               '    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Cerrar">\n' +
+               '      <span aria-hidden="true">&times;</span>\n' +
+               '    </button>\n' +
+               '  </div>\n' +
+               '  <div class="toast-body">' + message + '</div>\n' +
+               '</div>';
+
+    var $container = $('#globalToastContainer');
+    $container.append(html);
+    var $t = $('#' + id);
+    $t.toast('show');
+    $t.on('hidden.bs.toast', function() { $t.remove(); });
+}
+
 // Modal focus management to avoid aria-hidden focus warnings
 document.addEventListener('DOMContentLoaded', function() {
     var $globalModal = $('#globalAjaxModal');
