@@ -227,7 +227,6 @@
                         $displayName = trim($first . ($surnames ? ' ' . $surnames : ''));
                     @endphp
                     <h6 class="mb-0">{{ $displayName }}</h6>
-                    <small class="text-muted">{{ $qrCode->group_name }}</small>
                 </div>
                 <div class="card-body text-center">
                     <!-- QR Code Real -->
@@ -249,32 +248,30 @@
                         <code class="small">{{ $qrCode->qr_code }}</code>
                     </div>
                     
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <small class="text-muted">Escaneos</small>
-                            <div class="font-weight-bold">{{ $qrCode->total_scans }}</div>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted">Último</small>
-                            <div class="small">{{ \Carbon\Carbon::parse($qrCode->last_scanned)->format('d/m') }}</div>
-                        </div>
-                    </div>
+                    {{-- Estadísticas removidas por solicitud: Escaneos / Último --}}
                 </div>
-                <div class="card-footer text-center no-print">
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-primary btn-icon" title="Descargar PNG" 
-                                onclick="downloadQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
-                            <span class="fe fe-download fe-12"></span>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary btn-icon" title="Regenerar QR" 
-                                onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
-                            <span class="fe fe-refresh-cw fe-12"></span>
-                        </button>
-                        <button id="btn-print-{{ $qrCode->id }}" class="btn btn-sm btn-outline-info btn-icon" title="Imprimir Individual" 
-                                onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
-                            <span class="fe fe-printer fe-12"></span>
-                            <span id="btn-print-spinner-{{ $qrCode->id }}" class="spinner-border spinner-border-sm text-primary ml-2" role="status" style="display: none; width: .9rem; height: .9rem;" aria-hidden="true"></span>
-                        </button>
+                <div class="card-footer no-print">
+                    <div class="row align-items-center">
+                        <div class="col-auto text-left pr-0">
+                            <small class="text-muted">{{ $qrCode->group_name }}</small>
+                        </div>
+                        <div class="col text-right">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary btn-icon" title="Descargar PNG" 
+                                        onclick="downloadQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
+                                    <span class="fe fe-download fe-12"></span>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary btn-icon" title="Regenerar QR" 
+                                        onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
+                                    <span class="fe fe-refresh-cw fe-12"></span>
+                                </button>
+                                <button id="btn-print-{{ $qrCode->id }}" class="btn btn-sm btn-outline-info btn-icon" title="Imprimir Individual" 
+                                        onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
+                                    <span class="fe fe-printer fe-12"></span>
+                                    <span id="btn-print-spinner-{{ $qrCode->id }}" class="spinner-border spinner-border-sm text-primary ml-2" role="status" style="display: none; width: .9rem; height: .9rem;" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
