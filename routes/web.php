@@ -136,6 +136,9 @@ Route::middleware(['auth.custom'])->group(function () {
             Route::get('/qr-download-all', [StudentController::class, 'downloadAllQr'])->name('qr.download.all');
             Route::post('/qr-regenerate-all', [StudentController::class, 'regenerateAllQr'])->name('qr.regenerate.all');
             Route::get('/qr-print-layout', [StudentController::class, 'printLayout'])->name('qr.print.layout');
+            // Editar estudiante (Admin y Profesor)
+            Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
+            Route::put('/{student}', [StudentController::class, 'update'])->name('update');
         });
     });
     
