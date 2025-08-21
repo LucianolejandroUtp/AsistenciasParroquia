@@ -17,21 +17,6 @@
 @section('content')
 <!-- Tabla de Estudiantes con DataTables -->
 <div class="card">
-    <div class="card-header">
-        <div class="row align-items-center">
-            <div class="col">
-                <h4 class="card-header-title">Lista de Estudiantes</h4>
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-sm btn-primary" type="button">
-                    <span class="fe fe-download fe-12 mr-2"></span>Exportar Lista
-                </button>
-                <button class="btn btn-sm btn-outline-primary" type="button">
-                    <span class="fe fe-qr-code fe-12 mr-2"></span>Ver QR Codes
-                </button>
-            </div>
-        </div>
-    </div>
     <div class="card-body">
         <!-- Filtros del DataTable -->
         <div class="row mb-3">
@@ -58,10 +43,17 @@
                     <option value="low">Baja (<70%)</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary form-control-sm">
-                    <i class="fe fe-x-circle me-1"></i>Limpiar Filtros
-                </button>
+            <div class="col-md-3 d-flex align-items-center justify-content-end">
+                <div class="w-100 d-flex justify-content-end" style="gap:8px;">
+                    <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary">
+                        <i class="fe fe-x-circle me-1"></i>
+                        <span class="d-none d-sm-inline">Limpiar Filtros</span>
+                    </button>
+
+                    <button id="exportListBtn" class="btn btn-sm btn-primary" type="button">
+                        <span class="fe fe-download fe-12 mr-2"></span>Exportar Lista
+                    </button>
+                </div>
             </div>
         </div>
         
