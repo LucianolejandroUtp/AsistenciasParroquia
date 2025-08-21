@@ -66,7 +66,7 @@
                         <th>Grupo</th>
                         <th>Asistencia</th>
                         <th>Estado</th>
-                        <th>Registro</th>
+                        <!-- Columna 'Registro' eliminada -->
                         <th class="text-right">Acciones</th>
                     </tr>
                 </thead>
@@ -105,12 +105,7 @@
                                 {{ $student->status }}
                             </span>
                         </td>
-                        <td>
-                            <small class="text-muted">{{ $student->created_at }}</small>
-                            @if($student->updated_at !== $student->created_at)
-                                <br><small class="text-muted">Mod: {{ $student->updated_at }}</small>
-                            @endif
-                        </td>
+                        <!-- Columna 'Registro' removida -->
                         <td class="text-right">
                             <div class="btn-group btn-group-sm" role="group" aria-label="Acciones">
                                 <button type="button" class="btn btn-outline-primary" title="Ver Detalles">
@@ -187,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         "pageLength": 25,
         "order": [[1, "asc"]], // Ordenar por nombre por defecto
-        "columnDefs": [
+            "columnDefs": [
             {
                 "targets": [0], // Columna Orden
                 "type": "num",
@@ -199,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 "type": "num"
             },
             {
-                "targets": [6], // Columna Acciones
+                "targets": [5], // Columna Acciones (ajustada después de eliminar 'Registro')
                 "orderable": false,
                 "searchable": false,
                 "width": "160px"
@@ -320,13 +315,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Definir encabezados (excluir Acciones)
-            const headers = ['Orden', 'Nombre Completo', 'Grupo', 'Asistencia', 'Estado', 'Registro'];
+            // Definir encabezados (excluir Acciones y Registro)
+            const headers = ['Orden', 'Nombre Completo', 'Grupo', 'Asistencia', 'Estado'];
             const csvRows = [rowToCsv(headers)];
 
             rows.forEach(function(row) {
                 // row es un array de celdas en HTML; extraer texto según índice
-                // Columnas: 0 Orden, 1 Nombre, 2 Grupo, 3 Asistencia, 4 Estado, 5 Registro, 6 Acciones
+                // Columnas ahora: 0 Orden, 1 Nombre, 2 Grupo, 3 Asistencia, 4 Estado, 5 Acciones
                 const getText = function(cell) {
                     // Crear elemento temporal para limpiar HTML
                     const tmp = document.createElement('div');
@@ -339,9 +334,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const grupo = getText(row[2]);
                 const asistencia = getText(row[3]);
                 const estado = getText(row[4]);
-                const registro = getText(row[5]);
 
-                csvRows.push(rowToCsv([orden, nombre, grupo, asistencia, estado, registro]));
+                csvRows.push(rowToCsv([orden, nombre, grupo, asistencia, estado]));
             });
 
             const csvContent = csvRows.join('\n');
