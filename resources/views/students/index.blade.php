@@ -481,37 +481,58 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<!-- Toast container -->
-<div aria-live="polite" aria-atomic="true" style="position: fixed; top: 1rem; right: 1rem; z-index: 1080;">
-    <div id="globalToastContainer"></div>
-</div>
+<!-- Notifications container (TinyDash style) -->
+<div id="globalNotifications" class="notifications" style="position: fixed; top: 1rem; right: 1rem; z-index: 1080; min-width: 280px;"></div>
 
 <script>
-// Toast helper (Bootstrap 4)
+// TinyDash-style Notifications helper (compatible API: showToast(message, type))
+// Types: info, success, warning, danger
 function showToast(message, type) {
-    type = type || 'info'; // info, success, warning, danger
-    var bg = 'bg-info';
-    if (type === 'success') bg = 'bg-success text-white';
-    if (type === 'warning') bg = 'bg-warning';
-    if (type === 'danger') bg = 'bg-danger text-white';
+    type = type || 'info';
+    var icon = 'fe fe-info';
+    var cls = 'note note-info';
+    if (type === 'success') { icon = 'fe fe-check-circle'; cls = 'note note-success'; }
+    if (type === 'warning') { icon = 'fe fe-alert-triangle'; cls = 'note note-warning'; }
+    if (type === 'danger') { icon = 'fe fe-alert-octagon'; cls = 'note note-danger'; }
 
-    var id = 'toast-' + Date.now();
-    var html = '\n        <div id="' + id + '" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="4000">\n' +
-               '  <div class="toast-header ' + bg + '">\n' +
-               '    <strong class="mr-auto">Sistema</strong>\n' +
-               '    <small>ahora</small>\n' +
-               '    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Cerrar">\n' +
-               '      <span aria-hidden="true">&times;</span>\n' +
-               '    </button>\n' +
-               '  </div>\n' +
-               '  <div class="toast-body">' + message + '</div>\n' +
+    var id = 'notif-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    // Use stronger, opaque backgrounds and higher contrast text. Provide inline fallback styles
+    var bgStyle = 'background: #f0f8ff; color:#0a2540; border-left: 4px solid #1e90ff;';
+    if (type === 'success') bgStyle = 'background: #e6ffed; color:#08320a; border-left: 4px solid #16a34a;';
+    if (type === 'warning') bgStyle = 'background: #fff8e6; color:#4a3f00; border-left: 4px solid #f59e0b;';
+    if (type === 'danger') bgStyle = 'background: #ffecec; color:#3b0a0a; border-left: 4px solid #ef4444;';
+
+    var titleClass = 'mb-1';
+    var bodyClass = 'mb-0';
+
+    var html = '<div id="' + id + '" class="' + cls + ' mb-2 shadow-sm" role="status" aria-live="polite" style="' + bgStyle + ' padding:10px; border-radius:6px;">' +
+                   '<div class="note-body d-flex align-items-start">' +
+                       '<div class="me-2 mt-1" style="font-size:18px;line-height:1; color:inherit;"><i class="' + icon + '" aria-hidden="true"></i></div>' +
+                       '<div class="flex-fill" style="color:inherit;">' +
+                           '<h6 class="' + titleClass + '" style="margin:0; font-weight:600; color:inherit;">Sistema</h6>' +
+                           '<p class="' + bodyClass + ' small" style="margin:0; color:inherit; opacity:0.95;">' + message + '</p>' +
+                       '</div>' +
+                       '<div class="ms-2" style="align-self:flex-start;">' +
+                           '<button type="button" class="btn btn-sm btn-link text-muted notif-close" aria-label="Cerrar" style="color:inherit; opacity:0.8;">' +
+                               '<i class="fe fe-x"></i>' +
+                           '</button>' +
+                       '</div>' +
+                   '</div>' +
                '</div>';
 
-    var $container = $('#globalToastContainer');
+    var $container = $('#globalNotifications');
     $container.append(html);
-    var $t = $('#' + id);
-    $t.toast('show');
-    $t.on('hidden.bs.toast', function() { $t.remove(); });
+
+    // Auto-dismiss after ~6000ms
+    var $el = $('#' + id);
+    var timeout = setTimeout(function() {
+        $el.fadeOut(300, function() { $el.remove(); });
+    }, 6000);
+
+    $el.find('.notif-close').on('click', function() {
+        clearTimeout(timeout);
+        $el.fadeOut(200, function() { $el.remove(); });
+    });
 }
 
 // Modal focus management to avoid aria-hidden focus warnings
@@ -520,7 +541,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $globalModal.on('shown.bs.modal', function () {
         try {
-            // Enfocar el contenedor del body para que el foco esté dentro del modal
             var $body = $(this).find('#globalAjaxModalBody');
             $body.attr('tabindex', -1).focus();
         } catch (e) {}
@@ -530,7 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             var active = document.activeElement;
             if (active && this.contains(active)) {
-                // Desenfocar elementos activos dentro del modal
                 active.blur();
             }
         } catch (e) {}
