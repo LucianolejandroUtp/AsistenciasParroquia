@@ -487,52 +487,41 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // TinyDash-style Notifications helper (compatible API: showToast(message, type))
 // Types: info, success, warning, danger
+// Notifications helper mapped to TinyDash/Bootstrap alert markup
+// Uses the same structure as `resources/js/app.js` to ensure styles match the template
 function showToast(message, type) {
-    type = type || 'info';
-    var icon = 'fe fe-info';
-    var cls = 'note note-info';
-    if (type === 'success') { icon = 'fe fe-check-circle'; cls = 'note note-success'; }
-    if (type === 'warning') { icon = 'fe fe-alert-triangle'; cls = 'note note-warning'; }
-    if (type === 'danger') { icon = 'fe fe-alert-octagon'; cls = 'note note-danger'; }
+    type = type || 'info'; // info, success, warning, danger
+    var iconName = type === 'success' ? 'check-circle' : (type === 'danger' ? 'alert-circle' : (type === 'warning' ? 'alert-triangle' : 'info'));
 
-    var id = 'notif-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-    // Use stronger, opaque backgrounds and higher contrast text. Provide inline fallback styles
-    var bgStyle = 'background: #f0f8ff; color:#0a2540; border-left: 4px solid #1e90ff;';
-    if (type === 'success') bgStyle = 'background: #e6ffed; color:#08320a; border-left: 4px solid #16a34a;';
-    if (type === 'warning') bgStyle = 'background: #fff8e6; color:#4a3f00; border-left: 4px solid #f59e0b;';
-    if (type === 'danger') bgStyle = 'background: #ffecec; color:#3b0a0a; border-left: 4px solid #ef4444;';
+    var id = 'alert-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    var container = document.createElement('div');
+    container.id = id;
+    container.className = 'alert alert-' + (type === 'info' ? 'info' : type) + ' alert-dismissible fade show position-fixed';
+    container.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    container.setAttribute('role', 'alert');
+    container.innerHTML = '\n' +
+        '<i class="fe fe-' + iconName + ' mr-2"></i>' +
+        '<span class="align-middle">' + message + '</span>' +
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">' +
+            '<span aria-hidden="true">&times;</span>' +
+        '</button>';
 
-    var titleClass = 'mb-1';
-    var bodyClass = 'mb-0';
+    // Append to body for consistent placement with other template notifications
+    document.body.appendChild(container);
 
-    var html = '<div id="' + id + '" class="' + cls + ' mb-2 shadow-sm" role="status" aria-live="polite" style="' + bgStyle + ' padding:10px; border-radius:6px;">' +
-                   '<div class="note-body d-flex align-items-start">' +
-                       '<div class="me-2 mt-1" style="font-size:18px;line-height:1; color:inherit;"><i class="' + icon + '" aria-hidden="true"></i></div>' +
-                       '<div class="flex-fill" style="color:inherit;">' +
-                           '<h6 class="' + titleClass + '" style="margin:0; font-weight:600; color:inherit;">Sistema</h6>' +
-                           '<p class="' + bodyClass + ' small" style="margin:0; color:inherit; opacity:0.95;">' + message + '</p>' +
-                       '</div>' +
-                       '<div class="ms-2" style="align-self:flex-start;">' +
-                           '<button type="button" class="btn btn-sm btn-link text-muted notif-close" aria-label="Cerrar" style="color:inherit; opacity:0.8;">' +
-                               '<i class="fe fe-x"></i>' +
-                           '</button>' +
-                       '</div>' +
-                   '</div>' +
-               '</div>';
-
-    var $container = $('#globalNotifications');
-    $container.append(html);
-
-    // Auto-dismiss after ~6000ms
-    var $el = $('#' + id);
-    var timeout = setTimeout(function() {
-        $el.fadeOut(300, function() { $el.remove(); });
+    // Auto-remove after ~6000ms
+    setTimeout(function() {
+        if (container && container.parentNode) {
+            // Use Bootstrap's fade out if available
+            try {
+                $(container).alert('close');
+            } catch (e) {
+                container.remove();
+            }
+        }
     }, 6000);
 
-    $el.find('.notif-close').on('click', function() {
-        clearTimeout(timeout);
-        $el.fadeOut(200, function() { $el.remove(); });
-    });
+    // Allow manual close via the button (Bootstrap will handle removal)
 }
 
 // Modal focus management to avoid aria-hidden focus warnings
