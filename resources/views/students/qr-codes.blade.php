@@ -331,9 +331,10 @@
                                 onclick="regenerateQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-refresh-cw fe-12"></span>
                         </button>
-                        <button class="btn btn-sm btn-outline-info btn-icon" title="Imprimir Individual" 
+                        <button id="btn-print-{{ $qrCode->id }}" class="btn btn-sm btn-outline-info btn-icon" title="Imprimir Individual" 
                                 onclick="printQR({{ $qrCode->id }}, '{{ $qrCode->full_name }}')">
                             <span class="fe fe-printer fe-12"></span>
+                            <span id="btn-print-spinner-{{ $qrCode->id }}" class="spinner-border spinner-border-sm text-primary ml-2" role="status" style="display: none; width: .9rem; height: .9rem;" aria-hidden="true"></span>
                         </button>
                     </div>
                 </div>
@@ -579,36 +580,103 @@ function regenerateQR(studentId, studentName) {
 // Imprimir QR individual
 function printQR(studentId, studentName) {
     const canvas = document.getElementById(`qr-canvas-${studentId}`);
+    const btn = document.getElementById(`btn-print-${studentId}`);
+    const spinner = document.getElementById(`btn-print-spinner-${studentId}`);
+    const maxWait = 5000; // ms
+
     if (!canvas) return;
-    
-    const printWindow = window.open('', '_blank');
-    const qrDataURL = canvas.toDataURL();
-    
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>QR Code - ${studentName}</title>
-                <style>
-                    body { margin: 0; padding: 20px; text-align: center; font-family: Arial, sans-serif; }
-                    .qr-print { max-width: 300px; margin: 0 auto; }
-                    h2 { margin-top: 20px; color: #333; }
-                    .student-info { margin-top: 10px; color: #666; }
-                </style>
-            </head>
-            <body>
-                <div class="qr-print">
-                    <img src="${qrDataURL}" style="width: 100%;" />
-                    <h2>${studentName}</h2>
-                    <div class="student-info">Primera Comunión</div>
-                </div>
-            </body>
-        </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+
+    // Mostrar spinner en el botón
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.style.display = 'inline-block';
+
+    // Esperar a que el canvas esté listo (visible y con contenido)
+    const start = Date.now();
+    (function waitForCanvas() {
+        const isReady = canvas && canvas.width > 0 && canvas.style.display !== 'none';
+        if (isReady) {
+            proceedPrint();
+        } else if (Date.now() - start < maxWait) {
+            setTimeout(waitForCanvas, 100);
+        } else {
+            alert('El código QR no está listo para imprimir. Intenta regenerarlo.');
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.style.display = 'none';
+        }
+    })();
+
+    function proceedPrint() {
+        try {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('La ventana de impresión fue bloqueada por el navegador. Permite popups para continuar.');
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                return;
+            }
+
+            const dataURL = canvas.toDataURL();
+            const html = `
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>QR Code - ${studentName}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; text-align: center; }
+                        .qr-print { max-width: 320px; margin: 0 auto; }
+                        .qr-print img { width: 100%; height: auto; display: block; }
+                        h2 { margin-top: 10px; font-size: 18px; color: #333; }
+                        @media print { body { margin: 6mm; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="qr-print">
+                        <img src="${dataURL}" alt="QR for ${studentName}" />
+                        <h2>${studentName}</h2>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+
+            // Esperar a que la imagen cargue antes de imprimir
+            const img = printWindow.document.querySelector('img');
+            if (!img) {
+                printWindow.print();
+                cleanup();
+                return;
+            }
+
+            if (img.complete) {
+                printWindow.focus();
+                printWindow.print();
+                // No cerrar automáticamente
+                cleanup();
+            } else {
+                img.addEventListener('load', () => {
+                    printWindow.focus();
+                    printWindow.print();
+                    cleanup();
+                });
+                img.addEventListener('error', () => {
+                    alert('Error cargando la imagen de impresión');
+                    cleanup();
+                });
+            }
+        } catch (err) {
+            console.error('Error en printQR:', err);
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.style.display = 'none';
+        }
+    }
+
+    function cleanup() {
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+    }
 }
 
 // Descargar todos los QR como ZIP
