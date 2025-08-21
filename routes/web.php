@@ -125,6 +125,8 @@ Route::middleware(['auth.custom'])->group(function () {
         // Vistas principales de estudiantes (todos los usuarios autenticados)
         Route::get('/', [StudentController::class, 'index'])->name('index');
         Route::get('/qr-codes', [StudentController::class, 'qrCodes'])->name('qr-codes');
+    // Detalles (AJAX partial)
+    Route::get('/{student}/details', [StudentController::class, 'details'])->name('details');
         
         // Funcionalidades de códigos QR (Admin y Profesor)
         Route::middleware(['role:Admin,Profesor'])->group(function () {
