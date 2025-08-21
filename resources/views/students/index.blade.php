@@ -331,10 +331,31 @@ document.addEventListener('DOMContentLoaded', function() {
                             data: formData,
                             success: function(resp) {
                                 // Mostrar notificación mínima y cerrar modal
-                                showToast(resp.message || 'Guardado correctamente', 'success');
-                                $modal.modal('hide');
-                                // Recargar la página para reflejar cambios (puedes optimizar para actualizar la fila)
-                                window.location.reload();
+                                                                showToast(resp.message || 'Guardado correctamente', 'success');
+                                                                $modal.modal('hide');
+                                                                // Actualizar la fila en el DataTable in-place usando el DTO devuelto
+                                                                try {
+                                                                    var updated = resp.student;
+                                                                    var table = $('#studentsDataTable').DataTable();
+                                                                    table.rows().every(function() {
+                                                                        var data = this.data();
+                                                                        var tmp = document.createElement('div');
+                                                                        tmp.innerHTML = data[5] || '';
+                                                                        var btn = tmp.querySelector('[data-student-id]');
+                                                                        if (btn && String(btn.getAttribute('data-student-id')) === String(updated.id)) {
+                                                                            // Construir nuevas celdas HTML
+                                                                            var newOrden = '<span class="badge badge-soft-primary">' + (updated.order_number || '-') + '</span>';
+                                                                            var newNombre = '<div><strong>' + (updated.full_name) + '</strong></div>';
+                                                                            var newGrupo = '<span class="badge badge-' + (String(updated.group_name).indexOf('A') !== -1 ? 'primary' : 'info') + '">' + (updated.group_name || 'Sin Grupo') + '</span>';
+                                                                            var newEstado = '<span class="badge badge-' + (updated.status == 'ACTIVO' ? 'success' : 'secondary') + '">' + updated.status + '</span>';
+                                                                            data[0] = newOrden;
+                                                                            data[1] = newNombre;
+                                                                            data[2] = newGrupo;
+                                                                            data[4] = newEstado;
+                                                                            this.data(data).draw(false);
+                                                                        }
+                                                                    });
+                                                                } catch (e) { console.error('Error actualizando fila:', e); }
                             },
                             error: function(xhr) {
                                 if (xhr.status === 422) {

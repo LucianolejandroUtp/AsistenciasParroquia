@@ -192,7 +192,18 @@ class StudentController extends Controller
         $student->save();
 
         if ($request->ajax()) {
-            return response()->json(['message' => 'Estudiante actualizado correctamente', 'student_id' => $student->id]);
+            // Refrescar relaciones necesarias
+            $student->load('group');
+
+            $studentDto = (object) [
+                'id' => $student->id,
+                'order_number' => $student->order_number,
+                'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
+                'group_name' => $student->group ? $student->group->name : 'Sin Grupo',
+                'status' => $student->estado,
+            ];
+
+            return response()->json(['message' => 'Estudiante actualizado correctamente', 'student' => $studentDto]);
         }
 
         return redirect()->route('students.index')->with('success', 'Estudiante actualizado correctamente');
