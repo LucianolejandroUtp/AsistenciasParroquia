@@ -28,7 +28,7 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fe fe-info me-2"></i>Información de la Sesión
+                    <i class="fe fe-info me-2"></i>{{ $session->display_title }}
                 </h5>
             </div>
             <div class="card-body">
@@ -75,9 +75,19 @@
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-sm-5 fw-semibold">Creado:</div>
+                    <div class="col-sm-5 fw-semibold">Estado:</div>
                     <div class="col-sm-7">
-                        <small class="text-muted">{{ $session->created_at->format('d/m/Y H:i') }}</small>
+                        @if($session->estado === 'ACTIVO')
+                            <span class="badge bg-success">Activa</span>
+                        @elseif($session->estado === 'CERRADO')
+                            <span class="badge bg-danger">Cerrada</span>
+                        @elseif($session->estado === 'INACTIVO')
+                            <span class="badge bg-warning">Inactiva</span>
+                        @elseif($session->estado === 'ELIMINADO')
+                            <span class="badge bg-secondary">Eliminada</span>
+                        @else
+                            <span class="badge bg-light text-dark">{{ ucfirst(strtolower($session->estado ?? 'Sin estado')) }}</span>
+                        @endif
                     </div>
                 </div>
 
