@@ -9,14 +9,14 @@
 @endsection
 
 @section('content')
-<!-- Stats Row -->
+<!-- Stats Row (incluye métricas QR) -->
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
-                        <span class="h2 mb-0">78</span>
+                        <span class="h2 mb-0">{{ $totalStudents ?? 78 }}</span>
                         <p class="small text-muted mb-0">Total Estudiantes</p>
                     </div>
                     <div class="col-auto">
@@ -26,12 +26,13 @@
             </div>
         </div>
     </div>
+
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
-                        <span class="h2 mb-0">2</span>
+                        <span class="h2 mb-0">{{ $groupsActive ?? 2 }}</span>
                         <p class="small text-muted mb-0">Grupos Activos</p>
                     </div>
                     <div class="col-auto">
@@ -41,6 +42,42 @@
             </div>
         </div>
     </div>
+
+    <!-- QR Stats moved here -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <span class="h2 mb-0">{{ $qrStats->total_codes ?? '0' }}</span>
+                        <p class="small text-muted mb-0">Códigos QR Total</p>
+                    </div>
+                    <div class="col-auto">
+                        <span class="fe fe-qr-code fe-32 text-primary"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <span class="h2 mb-0">{{ $qrStats->active_codes ?? '0' }}</span>
+                        <p class="small text-muted mb-0">Códigos Activos</p>
+                    </div>
+                    <div class="col-auto">
+                        <span class="fe fe-check-circle fe-32 text-success"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
@@ -56,6 +93,39 @@
             </div>
         </div>
     </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <span class="h2 mb-0">{{ $qrStats->total_scans_today ?? '0' }}</span>
+                        <p class="small text-muted mb-0">Escaneos Hoy</p>
+                    </div>
+                    <div class="col-auto">
+                        <span class="fe fe-scan fe-32 text-warning"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <span class="h6 mb-0">@if(!empty($qrStats->last_generated)) {{ \Carbon\Carbon::parse($qrStats->last_generated)->format('d/m/Y') }} @else - @endif</span>
+                        <p class="small text-muted mb-0">Última Generación</p>
+                    </div>
+                    <div class="col-auto">
+                        <span class="fe fe-calendar fe-32 text-info"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
