@@ -151,69 +151,8 @@
 @endsection
 
 @section('content')
-<!-- Stats de QR -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $qrStats->total_codes }}</span>
-                        <p class="small text-muted mb-0">Códigos QR Total</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-qr-code fe-32 text-primary"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $qrStats->active_codes }}</span>
-                        <p class="small text-muted mb-0">Códigos Activos</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-check-circle fe-32 text-success"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h2 mb-0">{{ $qrStats->total_scans_today }}</span>
-                        <p class="small text-muted mb-0">Escaneos Hoy</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-scan fe-32 text-warning"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <span class="h6 mb-0">{{ \Carbon\Carbon::parse($qrStats->last_generated)->format('d/m/Y') }}</span>
-                        <p class="small text-muted mb-0">Última Generación</p>
-                    </div>
-                    <div class="col-auto">
-                        <span class="fe fe-calendar fe-32 text-info"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Stats de QR movidos al dashboard -->
+<!-- (Se han trasladado para mantener limpia la vista de códigos QR) -->
 
 <!-- Filtros y Acciones -->
 <div class="row mb-3">
