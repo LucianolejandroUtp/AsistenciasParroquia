@@ -432,6 +432,18 @@ document.addEventListener('DOMContentLoaded', function() {
         Html5Qrcode.getCameras()
             .then(cameras => {
                 console.log('Cámaras detectadas:', cameras);
+                
+                // Reordenar cámaras: priorizar cámaras traseras
+                cameras.sort((a, b) => {
+                    const aIsBack = /back|rear|environment/i.test(a.label || '');
+                    const bIsBack = /back|rear|environment/i.test(b.label || '');
+                    
+                    if (aIsBack && !bIsBack) return -1;
+                    if (!aIsBack && bIsBack) return 1;
+                    return 0;
+                });
+                
+                console.log('Cámaras reordenadas (traseras primero):', cameras);
                 availableCameras = cameras;
                 
                 if (cameraSelect) {
