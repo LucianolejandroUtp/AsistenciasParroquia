@@ -52,7 +52,7 @@
                 <div class="row mb-3">
                     <div class="col-5 fw-semibold">Hora:</div>
                     <div class="col-7">
-                        <i class="fe fe-clock me-1"></i>{{ $session->time->format('H:i') }}
+                        {{ $session->time->format('g:i A') }}
                     </div>
                 </div>
                 @endif
@@ -211,15 +211,15 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="fe fe-users me-2"></i>Registro de Asistencias
+                    <i class="fe fe-users me-2"></i>Asistencias
                 </h5>
                 @if($session->canTakeAttendance())
                 <div class="btn-group">
                     <a href="{{ route('attendances.register', ['session_id' => $session->id]) }}" class="btn btn-outline-primary">
-                        <i class="fe fe-edit me-1"></i>Registro Manual
+                        <i class="fe fe-edit me-1"></i>Manual
                     </a>
                     <a href="{{ route('attendances.qr-scanner', ['session_id' => $session->id]) }}" class="btn btn-primary">
-                        <i class="fe fe-camera me-1"></i>Registro QR
+                        <i class="fe fe-camera me-1"></i>QR
                     </a>
                 </div>
                 @endif
