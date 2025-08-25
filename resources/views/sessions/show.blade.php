@@ -236,6 +236,7 @@
                                     <th>Grupo</th>
                                     <th>Estado</th>
                                     <th>Observaciones</th>
+                                    <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -263,6 +264,17 @@
                                         @else
                                             <span class="text-muted">--</span>
                                         @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @can('update', $session)
+                                            @if($session->canTakeAttendance())
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="confirmDeleteAttendance({{ $attendance->id }}, '{{ $attendance->student->full_name }}')"
+                                                    data-bs-toggle="tooltip" title="Eliminar registro">
+                                                <i class="fe fe-trash-2"></i>
+                                            </button>
+                                            @endif
+                                        @endcan
                                     </td>
                                 </tr>
                                 @endforeach
@@ -375,6 +387,33 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Confirmación para Eliminar Asistencia -->
+<div class="modal fade" id="deleteAttendanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación de Asistencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar el registro de asistencia de <strong id="studentNameToDelete"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fe fe-alert-triangle me-2"></i>
+                    Esta acción no se puede deshacer. El estudiante no aparecerá como registrado en esta sesión.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteAttendanceForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Eliminar Registro</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -397,6 +436,12 @@ function confirmClose() {
 
 function confirmReopen() {
     new bootstrap.Modal(document.getElementById('reopenModal')).show();
+}
+
+function confirmDeleteAttendance(attendanceId, studentName) {
+    document.getElementById('studentNameToDelete').textContent = studentName;
+    document.getElementById('deleteAttendanceForm').action = `{{ url('/') }}/attendances/${attendanceId}`;
+    new bootstrap.Modal(document.getElementById('deleteAttendanceModal')).show();
 }
 </script>
 @endpush

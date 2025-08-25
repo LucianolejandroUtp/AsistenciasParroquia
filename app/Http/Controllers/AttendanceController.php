@@ -352,4 +352,30 @@ class AttendanceController extends Controller
 
         return view('attendances.history', compact('sessions', 'historyStats', 'groups', 'groupId', 'startDate', 'endDate'));
     }
+
+    /**
+     * Eliminar un registro de asistencia individual.
+     */
+    public function destroy(Attendance $attendance)
+    {
+        try {
+            // Verificar que la sesión permita modificaciones
+            if (!$attendance->attendanceSession->canTakeAttendance()) {
+                return redirect()->back()
+                    ->with('error', 'No se puede eliminar asistencias de esta sesión en su estado actual.');
+            }
+
+            $studentName = $attendance->student->full_name;
+            $sessionTitle = $attendance->attendanceSession->display_title;
+            
+            $attendance->delete();
+
+            return redirect()->back()
+                ->with('success', "Registro de asistencia de {$studentName} eliminado exitosamente de la sesión \"{$sessionTitle}\".");
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al eliminar el registro de asistencia: ' . $e->getMessage());
+        }
+    }
 }
