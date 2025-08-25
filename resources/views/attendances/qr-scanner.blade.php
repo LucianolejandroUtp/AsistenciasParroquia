@@ -19,7 +19,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <!--<div class="card-header">
                 <div class="row align-items-center">
                     <div class="col">
                         <h4 class="card-header-title">
@@ -28,7 +28,7 @@
                         </h4>
                     </div>
                 </div>
-            </div>
+            </div>-->
             <div class="card-body">
                 @if($selectedSession)
                     <!-- Información de la sesión seleccionada -->
@@ -57,11 +57,11 @@
                         </div>
                         <div class="col-md-6 text-md-right">
                             <div class="btn-group" role="group">
-                                <button class="btn btn-outline-secondary" data-toggle="modal" data-target="#changeSessionModal">
-                                    <i class="fe fe-edit-2 mr-1"></i>Cambiar Sesión
+                                <button class="btn btn-warning btn-lg" data-toggle="modal" data-target="#changeSessionModal">
+                                    <i class="fe fe-refresh-cw mr-2"></i>Cambiar Sesión
                                 </button>
-                                <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-outline-primary">
-                                    <i class="fe fe-users mr-1"></i>Registro Manual
+                                <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-info btn-lg">
+                                    <i class="fe fe-users mr-2"></i>Registro Manual
                                 </a>
                             </div>
                         </div>
