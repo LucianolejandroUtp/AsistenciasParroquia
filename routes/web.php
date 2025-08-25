@@ -156,6 +156,7 @@ Route::middleware(['auth.custom'])->group(function () {
             Route::post('/store', [AttendanceController::class, 'store'])->name('store');
             Route::get('/qr-scanner', [AttendanceController::class, 'qrScanner'])->name('qr-scanner');
             Route::post('/qr-scan', [AttendanceController::class, 'processQrScan'])->name('qr-scan');
+            Route::delete('/{attendance}', [AttendanceController::class, 'destroy'])->name('destroy');
         });
         
         // Historial de asistencias (todos los usuarios autenticados)
