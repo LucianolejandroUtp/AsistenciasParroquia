@@ -89,7 +89,7 @@
 @if($selectedSession)
 <!-- Estadísticas de Escaneo -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <span class="h3 mb-0 text-success">{{ $scanStats->total_scans }}</span>
@@ -97,7 +97,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <span class="h3 mb-0 text-primary">{{ $scanStats->successful_scans }}</span>
@@ -105,7 +105,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <span class="h3 mb-0 text-danger">{{ $scanStats->error_scans }}</span>
@@ -113,7 +113,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <span class="h3 mb-0 text-info">{{ $scanStats->scan_rate }}%</span>
