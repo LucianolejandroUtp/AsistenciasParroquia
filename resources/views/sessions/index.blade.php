@@ -378,19 +378,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function confirmDelete(sessionId, sessionTitle) {
     document.getElementById('sessionTitle').textContent = sessionTitle;
-    document.getElementById('deleteForm').action = `/sessions/${sessionId}`;
+    document.getElementById('deleteForm').action = `{{ url('/') }}/sessions/${sessionId}`;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 function confirmClose(sessionId, sessionTitle) {
     document.getElementById('closeSessionTitle').textContent = sessionTitle;
-    document.getElementById('closeForm').action = `/sessions/${sessionId}/close`;
+    document.getElementById('closeForm').action = `{{ url('/') }}/sessions/${sessionId}/close`;
     new bootstrap.Modal(document.getElementById('closeModal')).show();
 }
 
 function confirmReopen(sessionId, sessionTitle) {
     document.getElementById('reopenSessionTitle').textContent = sessionTitle;
-    document.getElementById('reopenForm').action = `/sessions/${sessionId}/reopen`;
+    document.getElementById('reopenForm').action = `{{ url('/') }}/sessions/${sessionId}/reopen`;
     new bootstrap.Modal(document.getElementById('reopenModal')).show();
 }
 </script>

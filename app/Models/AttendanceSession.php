@@ -32,6 +32,8 @@ class AttendanceSession extends Model
         'time',
         'title',
         'notes',
+        'estado',
+        'unique_id',
     ];
 
     /**
