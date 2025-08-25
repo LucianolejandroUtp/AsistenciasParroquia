@@ -24,17 +24,9 @@
                     <div class="col">
                         <h4 class="card-header-title">
                             <i class="fe fe-calendar mr-2"></i>
-                            Seleccionar Sesión
+                            Seleccionar Sesión de Catequesis
                         </h4>
                     </div>
-                    @if($selectedSession)
-                    <div class="col-auto">
-                        <span class="badge badge-success badge-lg">
-                            <i class="fe fe-check-circle mr-1"></i>
-                            Sesión Activa
-                        </span>
-                    </div>
-                    @endif
                 </div>
             </div>
             <div class="card-body">
@@ -56,6 +48,10 @@
                                 <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
                                     <i class="fe fe-{{ $selectedSession->status === 'active' ? 'play' : 'pause' }}-circle mr-1"></i>
                                     {{ ucfirst($selectedSession->status) }}
+                                </span>
+                                <span class="badge badge-success mr-2 mb-1">
+                                    <i class="fe fe-check-circle mr-1"></i>
+                                    Sesión Activa
                                 </span>
                             </div>
                         </div>
