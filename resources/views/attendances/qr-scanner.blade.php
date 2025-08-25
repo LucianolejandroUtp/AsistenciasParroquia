@@ -35,7 +35,9 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h5 class="mb-1">{{ $selectedSession->title }}</h5>
-                            <p class="text-muted mb-2">{{ $selectedSession->description ?? 'Sin descripción' }}</p>
+                            @if($selectedSession->notes)
+                                <p class="text-muted mb-2">{{ $selectedSession->notes }}</p>
+                            @endif
                             <div class="d-flex flex-wrap">
                                 <span class="badge badge-primary mr-2 mb-1">
                                     <i class="fe fe-calendar mr-1"></i>
