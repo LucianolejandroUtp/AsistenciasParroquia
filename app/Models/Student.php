@@ -124,6 +124,18 @@ class Student extends Model
     }
 
     /**
+     * Get the student's surnames only.
+     */
+    public function getSurnamesAttribute(): string
+    {
+        $surnames = trim($this->paternal_surname);
+        if ($this->maternal_surname) {
+            $surnames .= ' ' . $this->maternal_surname;
+        }
+        return $surnames;
+    }
+
+    /**
      * Get the student's display name with order number.
      */
     public function getDisplayNameAttribute(): string

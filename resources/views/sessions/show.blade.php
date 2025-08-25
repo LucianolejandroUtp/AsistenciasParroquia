@@ -244,8 +244,8 @@
                                 <tr>
                                     <td>{{ $attendance->student->order_number }}</td>
                                     <td>
-                                        <div class="fw-semibold">{{ $attendance->student->full_name }}</div>
-                                        <small class="text-muted">{{ $attendance->student->student_code }}</small>
+                                        <div class="fw-semibold">{{ $attendance->student->names }}</div>
+                                        <small class="text-muted">{{ $attendance->student->surnames }}</small>
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark">
