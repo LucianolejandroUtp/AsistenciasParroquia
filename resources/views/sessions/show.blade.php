@@ -28,7 +28,7 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fe fe-info me-2"></i>{{ $session->display_title }}
+                    <i class="fe fe-info" style="margin-right: 0.5rem;"></i>{{ $session->display_title }}
                 </h5>
             </div>
             <div class="card-body">
@@ -139,7 +139,7 @@
         <div class="card mt-4">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fe fe-bar-chart-2 me-2"></i>Estadísticas de Asistencia
+                    <i class="fe fe-bar-chart-2" style="margin-right: 0.5rem;"></i>Estadísticas de Asistencia
                 </h5>
             </div>
             <div class="card-body">
@@ -195,7 +195,7 @@
                     </div>
                 @else
                     <div class="text-center text-muted">
-                        <i class="fe fe-users" style="font-size: 2rem;"></i>
+                        <i class="fe fe-users me-2" style="font-size: 2rem;"></i>
                         <p class="mt-2 mb-0">Aún no hay asistencias registradas</p>
                         @if($session->canTakeAttendance())
                         <small>Puedes comenzar a registrar asistencias cuando esté lista la sesión.</small>
@@ -211,15 +211,15 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="fe fe-users me-2"></i>Asistencias
+                    <i class="fe fe-users" style="margin-right: 0.5rem;"></i>Asistencias
                 </h5>
                 @if($session->canTakeAttendance())
                 <div class="btn-group">
                     <a href="{{ route('attendances.register', ['session_id' => $session->id]) }}" class="btn btn-outline-primary">
-                        <i class="fe fe-edit me-1"></i>Manual
+                        <i class="fe fe-edit" style="margin-right: 0.5rem;"></i>Manual
                     </a>
                     <a href="{{ route('attendances.qr-scanner', ['session_id' => $session->id]) }}" class="btn btn-primary">
-                        <i class="fe fe-camera me-1"></i>QR
+                        <i class="fe fe-camera" style="margin-right: 0.5rem;"></i>QR
                     </a>
                 </div>
                 @endif
@@ -254,7 +254,7 @@
                                     </td>
                                     <td>
                                         <span class="badge {{ $attendance->status_css_class }}">
-                                            <i class="{{ $attendance->status_icon }} me-1"></i>
+                                            <i class="{{ $attendance->status_icon }}" style="margin-right: 0.5rem;"></i>
                                             {{ $attendance->status_display }}
                                         </span>
                                     </td>
@@ -295,10 +295,10 @@
                         @if($session->canTakeAttendance())
                         <div class="btn-group">
                             <a href="{{ route('attendances.register', ['session_id' => $session->id]) }}" class="btn btn-outline-primary">
-                                <i class="fe fe-edit me-1"></i>Registro Manual
+                                <i class="fe fe-edit me-2"></i>Registro Manual
                             </a>
                             <a href="{{ route('attendances.qr-scanner', ['session_id' => $session->id]) }}" class="btn btn-primary">
-                                <i class="fe fe-camera me-1"></i>Registro QR
+                                <i class="fe fe-camera me-2"></i>Registro QR
                             </a>
                         </div>
                         @endif
