@@ -47,10 +47,10 @@
                                     <i class="fe fe-clock mr-1"></i>
                                     {{ $selectedSession->time ? $selectedSession->time->format('H:i') : 'Sin hora' }}
                                 </span>
-                                <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
+                              <!--  <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
                                     <i class="fe fe-{{ $selectedSession->status === 'active' ? 'play' : 'pause' }}-circle mr-1"></i>
                                     {{ ucfirst($selectedSession->status) }}
-                                </span>
+                                </span>-->
                                 <span class="badge badge-success mr-2 mb-1">
                                     <i class="fe fe-check-circle mr-1"></i>
                                     Sesión Activa
