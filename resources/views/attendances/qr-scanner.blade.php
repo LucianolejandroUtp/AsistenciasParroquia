@@ -24,7 +24,7 @@
                     <div class="col">
                         <h4 class="card-header-title">
                             <i class="fe fe-calendar mr-2"></i>
-                            Seleccionar Sesión de Catequesis
+                            Seleccionar Sesión
                         </h4>
                     </div>
                     @if($selectedSession)
@@ -132,7 +132,7 @@
                     <div class="col">
                         <h4 class="card-header-title">
                             <i class="fe fe-camera mr-2"></i>
-                            Escáner de Códigos QR
+                            <!--Escáner de Códigos QR -->
                         </h4>
                     </div>
                     <div class="col-auto">
