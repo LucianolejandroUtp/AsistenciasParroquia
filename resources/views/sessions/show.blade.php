@@ -33,8 +33,8 @@
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-sm-5 fw-semibold">Fecha:</div>
-                    <div class="col-sm-7">
+                    <div class="col-5 fw-semibold">Fecha:</div>
+                    <div class="col-7">
                         <span class="fw-semibold">{{ $session->date->locale('es')->isoFormat('DD MMM YYYY') }}</span>
                         @if($session->isClosed())
                             <span class="badge bg-danger ms-1">CERRADA</span>
@@ -50,16 +50,16 @@
 
                 @if($session->time)
                 <div class="row mb-3">
-                    <div class="col-sm-5 fw-semibold">Hora:</div>
-                    <div class="col-sm-7">
+                    <div class="col-5 fw-semibold">Hora:</div>
+                    <div class="col-7">
                         <i class="fe fe-clock me-1"></i>{{ $session->time->format('H:i') }}
                     </div>
                 </div>
                 @endif
 
                 <div class="row mb-3">
-                    <div class="col-sm-5 fw-semibold">Creado por:</div>
-                    <div class="col-sm-7">
+                    <div class="col-5 fw-semibold">Creado por:</div>
+                    <div class="col-7">
                         <div class="d-flex align-items-center">
                             <div class="avatar avatar-sm me-2">
                                 <span class="avatar-title bg-primary rounded-circle">
@@ -75,8 +75,8 @@
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-sm-5 fw-semibold">Estado:</div>
-                    <div class="col-sm-7">
+                    <div class="col-5 fw-semibold">Estado:</div>
+                    <div class="col-7">
                         @if($session->estado === 'ACTIVO')
                             <span class="badge bg-success">Activa</span>
                         @elseif($session->estado === 'CERRADO')
