@@ -351,7 +351,9 @@
 
 @push('styles')
 <style>
-/* CSS específico para corregir alineación del video QR Scanner en laptops/desktop */
+/* ===== CSS OPTIMIZADO PARA QR SCANNER ===== */
+
+/* Contenedor principal del scanner */
 #qr-reader {
     display: flex !important;
     justify-content: center !important;
@@ -361,30 +363,19 @@
     position: relative !important;
 }
 
-/* Forzar que el video de la cámara se centre y mantenga aspecto */
+/* Video de la cámara - configuración base */
 #qr-reader video {
+    width: 100% !important;
+    height: auto !important;
     max-width: 100% !important;
     max-height: 100% !important;
-    width: auto !important;
-    height: auto !important;
     object-fit: contain !important;
     border-radius: 8px;
     display: block !important;
     position: relative !important;
 }
 
-/* SOLUCIÓN AGRESIVA: Usar transform para escalar si es necesario */
-@media (min-width: 768px) {
-    #qr-reader video[style*="width: 606px"], 
-    #qr-reader video[style*="width: 600px"], 
-    #qr-reader video[style*="width: 5"],
-    #qr-reader video[style*="width: 4"] {
-        transform: scale(0.65) !important;
-        transform-origin: center !important;
-    }
-}
-
-/* Centrar el contenedor del canvas de overlay para el marco de escaneo */
+/* Canvas overlay para el marco de escaneo */
 #qr-reader canvas {
     position: absolute !important;
     top: 50% !important;
@@ -394,7 +385,24 @@
     max-height: 100% !important;
 }
 
-/* Mejorar responsividad en pantallas grandes */
+/* Elementos internos de HTML5-QRCode */
+#qr-reader > div {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+/* Contención universal para todos los elementos */
+#qr-reader * {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* SOLUCIÓN ESPECÍFICA: Videos grandes que se desbordan */
 @media (min-width: 768px) {
     .scanner-container {
         display: flex;
@@ -404,58 +412,24 @@
         overflow: hidden !important;
     }
     
-    #qr-reader {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: 100% !important;
-        max-height: 100% !important;
-    }
-    
-    /* Forzar que el video no se salga del contenedor */
-    #qr-reader video {
-        max-width: 100% !important;
-        max-height: 100% !important;
-        width: auto !important;
-        height: auto !important;
-        object-fit: contain !important;
+    /* Escalar videos anchos automáticamente */
+    #qr-reader video[style*="width: 606px"], 
+    #qr-reader video[style*="width: 600px"], 
+    #qr-reader video[style*="width: 5"],
+    #qr-reader video[style*="width: 4"] {
+        transform: scale(0.65) !important;
+        transform-origin: center !important;
     }
 }
 
-/* Mantener comportamiento normal en móviles */
+/* Comportamiento en móviles */
 @media (max-width: 767px) {
     #qr-reader video {
-        width: 100% !important;
-        height: 100% !important;
         object-fit: cover !important;
     }
 }
 
-/* Estilos para elementos internos de HTML5-QRCode */
-#qr-reader > div {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: #000 !important;
-    overflow: hidden !important;
-    position: relative !important;
-}
-
-/* Asegurar que ningún elemento se salga del contenedor */
-#qr-reader * {
-    max-width: 100% !important;
-    max-height: 100% !important;
-}
-
-/* Estrategia adicional: forzar width específico */
-#qr-reader video {
-    width: 100% !important;
-    height: auto !important;
-    max-width: 100% !important;
-}
-
-/* Centrar botones de control de la librería */
+/* Botones de control de la librería */
 #qr-reader button {
     position: absolute !important;
     bottom: 10px !important;
