@@ -47,10 +47,11 @@
                                     <i class="fe fe-clock mr-1"></i>
                                     {{ $selectedSession->time ? $selectedSession->time->format('H:i') : 'Sin hora' }}
                                 </span>
-                              <!--  <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
+                                <!-- <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
                                     <i class="fe fe-{{ $selectedSession->status === 'active' ? 'play' : 'pause' }}-circle mr-1"></i>
                                     {{ ucfirst($selectedSession->status) }}
-                                </span>-->
+                                </span>
+                                -->
                                 <span class="badge badge-success mr-2 mb-1">
                                     <i class="fe fe-check-circle mr-1"></i>
                                     Sesión Activa
@@ -167,9 +168,9 @@
                 </div>
 
                 <!-- Área de Video/Scanner -->
-                <div class="scanner-container position-relative bg-dark rounded" style="height: 400px;">
+                <div class="scanner-container position-relative bg-dark rounded" style="height: 400px; overflow: hidden !important;">
                     <!-- Contenedor para HTML5-QRCode Scanner -->
-                    <div id="qr-reader" class="w-100 h-100"></div>
+                    <div id="qr-reader" class="w-100 h-100" style="overflow: hidden !important;"></div>
                     
                     <!-- Overlay para mensajes cuando no está activo -->
                     <div id="scanner-overlay" class="position-absolute d-flex flex-column justify-content-center align-items-center text-center w-100 h-100 text-light" style="top: 0; left: 0; background: rgba(0,0,0,0.7);">
@@ -347,6 +348,122 @@
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+/* CSS específico para corregir alineación del video QR Scanner en laptops/desktop */
+#qr-reader {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    background: #000 !important;
+    position: relative !important;
+}
+
+/* Forzar que el video de la cámara se centre y mantenga aspecto */
+#qr-reader video {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 8px;
+    display: block !important;
+    position: relative !important;
+}
+
+/* SOLUCIÓN AGRESIVA: Usar transform para escalar si es necesario */
+@media (min-width: 768px) {
+    #qr-reader video[style*="width: 606px"], 
+    #qr-reader video[style*="width: 600px"], 
+    #qr-reader video[style*="width: 5"],
+    #qr-reader video[style*="width: 4"] {
+        transform: scale(0.65) !important;
+        transform-origin: center !important;
+    }
+}
+
+/* Centrar el contenedor del canvas de overlay para el marco de escaneo */
+#qr-reader canvas {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* Mejorar responsividad en pantallas grandes */
+@media (min-width: 768px) {
+    .scanner-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 400px !important;
+        overflow: hidden !important;
+    }
+    
+    #qr-reader {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+    }
+    
+    /* Forzar que el video no se salga del contenedor */
+    #qr-reader video {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Mantener comportamiento normal en móviles */
+@media (max-width: 767px) {
+    #qr-reader video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+}
+
+/* Estilos para elementos internos de HTML5-QRCode */
+#qr-reader > div {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #000 !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+/* Asegurar que ningún elemento se salga del contenedor */
+#qr-reader * {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* Estrategia adicional: forzar width específico */
+#qr-reader video {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+}
+
+/* Centrar botones de control de la librería */
+#qr-reader button {
+    position: absolute !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    z-index: 10 !important;
+}
+</style>
+@endpush
 
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -528,8 +645,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configuración del scanner
         const config = {
             fps: 10,
-            qrbox: { width: 300, height: 300 },
-            aspectRatio: 1.777778,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.333333, // 4:3 ratio para evitar franjas negras
             rememberLastUsedCamera: true,
             showTorchButtonIfSupported: true,
             formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
