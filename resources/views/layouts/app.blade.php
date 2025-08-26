@@ -126,16 +126,63 @@
         /* Hide text elements when sidebar is collapsed */
         .sidebar-collapsed .sidebar-left {
             width: 60px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Hover behavior for collapsed sidebar - expand temporarily */
+        .sidebar-collapsed .sidebar-left:hover {
+            width: 240px;
         }
         
         .sidebar-collapsed .item-text,
         .sidebar-collapsed .nav-heading span,
         .sidebar-collapsed .navbar-brand small {
             display: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Show text on hover when sidebar is collapsed */
+        .sidebar-collapsed .sidebar-left:hover .item-text,
+        .sidebar-collapsed .sidebar-left:hover .nav-heading span,
+        .sidebar-collapsed .sidebar-left:hover .navbar-brand small {
+            display: initial;
+            opacity: 1;
         }
         
         .sidebar-collapsed .navbar-brand .d-flex {
             justify-content: center;
+        }
+        
+        /* Restore normal flex behavior on hover */
+        .sidebar-collapsed .sidebar-left:hover .navbar-brand .d-flex {
+            justify-content: flex-start;
+        }
+        
+        /* Hide theme switcher when sidebar is collapsed, keep sidebar toggle visible */
+        .sidebar-collapsed .theme-switcher-item {
+            display: none;
+        }
+        
+        /* Show theme switcher icon only when collapsed */
+        .sidebar-collapsed .theme-switcher-item .nav-link {
+            display: flex !important;
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        .sidebar-collapsed .theme-switcher-item {
+            display: block !important;
+        }
+        
+        /* Hide only the text, keep icon visible */
+        .sidebar-collapsed .theme-switcher-item .item-text {
+            display: none !important;
+        }
+        
+        /* Show text on hover */
+        .sidebar-collapsed .sidebar-left:hover .theme-switcher-item .item-text {
+            display: initial !important;
         }
         
         /* Enhanced sidebar styling */
@@ -169,15 +216,6 @@
             background-color: #f8f9fa;
             border-color: #dee2e6;
             color: #495057;
-        }
-        
-        /* Notification badge */
-        .btn .position-absolute {
-            top: -2px !important;
-            right: -2px !important;
-            width: 8px !important;
-            height: 8px !important;
-            padding: 0 !important;
         }
         
         /* FORCE MOBILE SIDEBAR VISIBILITY - DEBUG */
@@ -233,27 +271,23 @@
                 </div>
 
                 <!-- Quick Tools -->
-                <div class="w-100 mb-3 px-3">
-                    <div class="d-flex justify-content-between">
-                        <!-- Theme Switcher -->
-                        <button class="btn btn-sm btn-outline-secondary" id="modeSwitcher" data-mode="light" title="Cambiar tema">
-                            <i class="fe fe-sun"></i>
-                        </button>
-                        
-                        <!-- Notifications -->
-                        <button class="btn btn-sm btn-outline-secondary position-relative" data-toggle="modal" data-target=".modal-notif" title="Notificaciones">
-                            <i class="fe fe-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
-                                <span class="visually-hidden">New notifications</span>
-                            </span>
-                        </button>
-                        
-                        <!-- Sidebar Toggle for Desktop -->
-                        <button type="button" class="btn btn-sm btn-outline-secondary d-none d-lg-block collapseSidebar" title="Contraer sidebar">
-                            <i class="fe fe-menu"></i>
-                        </button>
-                    </div>
-                </div>
+                <ul class="navbar-nav flex-fill w-100 mb-2">
+                    <!-- Sidebar Toggle -->
+                    <li class="nav-item d-none d-lg-block">
+                        <a href="#" class="nav-link collapseSidebar" title="Contraer sidebar">
+                            <i class="fe fe-menu fe-16"></i>
+                            <span class="ml-3 item-text">Contraer</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Theme Switcher -->
+                    <li class="nav-item theme-switcher-item">
+                        <a href="#" class="nav-link" id="modeSwitcher" data-mode="light" title="Cambiar tema">
+                            <i class="fe fe-sun fe-16"></i>
+                            <span class="ml-3 item-text">Tema Claro</span>
+                        </a>
+                    </li>
+                </ul>
 
                 <!-- Main Navigation -->
                 <ul class="navbar-nav flex-fill w-100 mb-2">
@@ -506,63 +540,6 @@
         </main>
     </div>
 
-    <!-- Notifications Modal -->
-    <div class="modal fade modal-notif modal-slide" tabindex="-1" role="dialog" aria-labelledby="defaultModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-sm" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="defaultModalLabel">Notificaciones</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="list-group list-group-flush my-n3">
-                        <div class="list-group-item bg-transparent">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="fe fe-box fe-24"></span>
-                                </div>
-                                <div class="col">
-                                    <small><strong>Nueva sesión programada</strong></small>
-                                    <div class="my-0 text-muted small">Catequesis - Grupo A</div>
-                                    <small class="badge badge-pill badge-light text-muted">Hace 1h</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="fe fe-users fe-24"></span>
-                                </div>
-                                <div class="col">
-                                    <small><strong>5 estudiantes registrados</strong></small>
-                                    <div class="my-0 text-muted small">Sesión actual</div>
-                                    <small class="badge badge-pill badge-light text-muted">Hace 30min</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="fe fe-bell fe-24"></span>
-                                </div>
-                                <div class="col">
-                                    <small><strong>Sistema actualizado</strong></small>
-                                    <div class="my-0 text-muted small">Nuevas funciones disponibles</div>
-                                    <small class="badge badge-pill badge-light text-muted">Ayer</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-block" data-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- TinyDash JavaScript -->
     <script src="{{ asset('tinydash/js/jquery.min.js') }}"></script>
     <script src="{{ asset('tinydash/js/popper.min.js') }}"></script>
@@ -639,14 +616,6 @@
                 }
             });
             
-            // Restore sidebar state on page load (desktop only)
-            if ($(window).width() >= 992) {
-                const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-                if (sidebarCollapsed) {
-                    $('body').addClass('sidebar-collapsed');
-                }
-            }
-            
             // Enhanced theme switcher
             $('#modeSwitcher').on('click', function(e) {
                 e.preventDefault();
@@ -656,6 +625,10 @@
                 // Update button
                 $(this).attr('data-mode', newMode);
                 $(this).find('i').removeClass('fe-sun fe-moon').addClass(newMode === 'light' ? 'fe-sun' : 'fe-moon');
+                
+                // Update text in sidebar
+                const textSpan = $(this).find('.item-text');
+                textSpan.text(newMode === 'light' ? 'Tema Claro' : 'Tema Oscuro');
                 
                 // Update body class
                 $('body').removeClass('light dark').addClass(newMode);
@@ -673,10 +646,23 @@
                 localStorage.setItem('theme', newMode);
             });
             
+            // Restore sidebar state on page load (desktop only)
+            if ($(window).width() >= 992) {
+                const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+                if (sidebarCollapsed) {
+                    $('body').addClass('sidebar-collapsed');
+                }
+            }
+            
             // Restore theme on page load
             const savedTheme = localStorage.getItem('theme') || 'light';
             if (savedTheme === 'dark') {
-                $('#modeSwitcher').click();
+                // Initialize dark theme
+                $('#modeSwitcher').attr('data-mode', 'light'); // Set to light first
+                $('#modeSwitcher').click(); // Then trigger the switch to dark
+            } else {
+                // Ensure light theme text is set correctly
+                $('#modeSwitcher .item-text').text('Tema Claro');
             }
             
             console.log('Enhanced sidebar layout with mobile support initialized');
