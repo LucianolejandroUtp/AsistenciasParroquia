@@ -123,6 +123,26 @@
             width: calc(100% - 60px);
         }
         
+        /* Hide text elements when sidebar is collapsed */
+        .sidebar-collapsed .sidebar-left {
+            width: 60px;
+        }
+        
+        .sidebar-collapsed .item-text,
+        .sidebar-collapsed .nav-heading span,
+        .sidebar-collapsed .navbar-brand small {
+            display: none;
+        }
+        
+        .sidebar-collapsed .navbar-brand .d-flex {
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .card,
+        .sidebar-collapsed .btn-outline-secondary {
+            display: none;
+        }
+        
         /* Enhanced sidebar styling */
         .sidebar-left {
             width: 240px;
