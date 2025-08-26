@@ -19,6 +19,177 @@
     <link rel="stylesheet" href="{{ asset('tinydash/css/app-light.css') }}" id="lightTheme">
     <link rel="stylesheet" href="{{ asset('tinydash/css/app-dark.css') }}" id="darkTheme" disabled>
     
+    <!-- Custom Layout Styles -->
+    <style>
+        /* Adjust main content to fill space without topnav */
+        .main-content {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+            padding-top: 1rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 991px) {
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding-top: 1rem; /* Reducido ya que el botón está en el lado */
+            }
+            
+            .sidebar-left {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1001; /* Higher than overlay */
+            }
+            
+            .sidebar-left.show {
+                transform: translateX(0) !important;
+            }
+            
+            /* Override any conflicting styles */
+            .sidebar-left.show {
+                left: 0 !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                transform: translateX(0) !important;
+            }
+            
+            /* Overlay for mobile */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                display: none;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+                opacity: 1;
+            }
+            
+            /* Mobile menu button styling */
+            #mobileMenuBtn {
+                box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+                z-index: 1002;
+                transition: all 0.3s ease;
+                border: none;
+                width: 56px;
+                height: 56px;
+                border-radius: 0 28px 28px 0; /* Media luna - solo redondeado a la derecha */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding-left: 16px; /* Más padding para compensar la posición negativa */
+                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                border-left: none; /* Sin borde izquierdo para pegarse al edge */
+                margin-left: 0;
+                overflow: visible; /* Permitir que sobresalga del viewport */
+            }
+            
+            #mobileMenuBtn:hover {
+                transform: translateY(-50%) translateX(12px); /* Deslizar más hacia la derecha al hover */
+                box-shadow: 4px 0 12px rgba(0,0,0,0.25);
+                width: 64px; /* Expandir ligeramente */
+                left: -4px; /* Menos negativo en hover para efecto suave */
+            }
+            
+            #mobileMenuBtn:active {
+                transform: translateY(-50%) translateX(6px);
+            }
+            
+            #mobileMenuBtn:focus {
+                box-shadow: 2px 0 8px rgba(0,0,0,0.15), 0 0 0 3px rgba(0,123,255,0.25);
+            }
+        }
+        
+        /* Desktop behavior */
+        @media (min-width: 992px) {
+            .sidebar-left {
+                transform: translateX(0) !important;
+            }
+        }
+        
+        /* Sidebar collapsed state */
+        .sidebar-collapsed .main-content {
+            margin-left: 60px;
+            width: calc(100% - 60px);
+        }
+        
+        /* Enhanced sidebar styling */
+        .sidebar-left {
+            width: 240px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            background-color: white;
+        }
+        
+        /* User profile card in sidebar */
+        .sidebar-left .card {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-left .card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Quick tools buttons */
+        .sidebar-left .btn-outline-secondary {
+            border-color: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .sidebar-left .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #495057;
+        }
+        
+        /* Search form styling */
+        .sidebar-left .searchform .form-control {
+            font-size: 0.875rem;
+        }
+        
+        /* Notification badge */
+        .btn .position-absolute {
+            top: -2px !important;
+            right: -2px !important;
+            width: 8px !important;
+            height: 8px !important;
+            padding: 0 !important;
+        }
+        
+        /* FORCE MOBILE SIDEBAR VISIBILITY - DEBUG */
+        @media (max-width: 991px) {
+            #leftSidebar.show {
+                transform: translateX(0px) !important;
+                left: 0px !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: fixed !important;
+                top: 0 !important;
+                width: 240px !important;
+                height: 100vh !important;
+                z-index: 1001 !important;
+                background: white !important;
+                border-right: 1px solid #dee2e6 !important;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.2) !important;
+            }
+        }
+    </style>
+    
     <!-- Additional CSS -->
     @yield('additional-css')
     
@@ -27,67 +198,17 @@
 </head>
 <body class="vertical light">
     <div class="wrapper">
-        <!-- Top Navigation -->
-        <nav class="topnav navbar navbar-light">
-            <button type="button" class="navbar-toggler text-muted mt-2 p-0 mr-3 collapseSidebar">
-                <i class="fe fe-menu navbar-toggler-icon"></i>
-            </button>
-            
-            <form class="form-inline mr-auto searchform text-muted">
-                <input class="form-control mr-sm-2 bg-transparent border-0 pl-4 text-muted" type="search" 
-                       placeholder="Buscar estudiante..." aria-label="Search">
-            </form>
-            
-            <ul class="nav">
-                <li class="nav-item">
-                    <a class="nav-link text-muted my-2" href="#" id="modeSwitcher" data-mode="light">
-                        <i class="fe fe-sun fe-16"></i>
-                    </a>
-                </li>
-                <li class="nav-item nav-notif">
-                    <a class="nav-link text-muted my-2" href="#" data-toggle="modal" data-target=".modal-notif">
-                        <span class="fe fe-bell fe-16"></span>
-                        <span class="dot dot-md bg-success"></span>
-                    </a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-muted pr-0" href="#" id="navbarDropdownMenuLink" 
-                       role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="avatar avatar-sm mt-2">
-                            <img src="{{ asset('tinydash/assets/avatars/face-1.jpg') }}" alt="..." class="avatar-img rounded-circle">
-                        </span>
-                        <span class="ml-2 d-none d-lg-inline">
-                            @auth
-                                {{ auth()->user()->name ?? 'Usuario' }}
-                            @else
-                                Invitado
-                            @endauth
-                        </span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                        @auth
-                            <a class="dropdown-item" href="#">Perfil</a>
-                            <a class="dropdown-item" href="#">Configuración</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                Cerrar Sesión
-                            </a>
-                            <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
-                                @csrf
-                            </form>
-                        @else
-                            <a class="dropdown-item" href="{{ route('auth.login') }}">Iniciar Sesión</a>
-                        @endauth
-                    </div>
-                </li>
-            </ul>
-        </nav>
-
+        <!-- Mobile Menu Button -->
+        <button type="button" class="btn btn-primary d-lg-none position-fixed" id="mobileMenuBtn" 
+                style="top: 15%; left: -20px; transform: translateY(-50%); z-index: 1001;">
+            <i class="fe fe-menu"></i>
+        </button>
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
         <!-- Left Sidebar -->
         <aside class="sidebar-left border-right bg-white shadow" id="leftSidebar" data-simplebar>
-            <a href="#" class="btn collapseSidebar toggle-btn d-lg-none text-muted ml-2 mt-3" data-toggle="toggle">
-                <i class="fe fe-x"><span class="sr-only"></span></i>
-            </a>
             <nav class="vertnav navbar navbar-light">
                 <!-- Logo -->
                 <div class="w-100 mb-4 d-flex">
@@ -100,6 +221,100 @@
                             </small>
                         </div>
                     </a>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="w-100 mb-3 px-3">
+                    <form class="searchform">
+                        <div class="input-group">
+                            <input class="form-control form-control-sm bg-light border-0" type="search" 
+                                   placeholder="Buscar estudiante..." aria-label="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-light border-0" type="submit">
+                                    <i class="fe fe-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- User Profile Section -->
+                <div class="w-100 mb-3 px-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body p-2">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm mr-2">
+                                    <img src="{{ asset('tinydash/assets/avatars/face-1.jpg') }}" alt="..." class="avatar-img rounded-circle">
+                                </div>
+                                <div class="flex-fill">
+                                    <h6 class="mb-0 text-dark small">
+                                        @auth
+                                            {{ auth()->user()->name ?? 'Usuario' }}
+                                        @else
+                                            Invitado
+                                        @endauth
+                                    </h6>
+                                    <small class="text-muted">
+                                        @auth
+                                            {{ auth()->user()->userType->name ?? 'Usuario' }}
+                                        @else
+                                            No autenticado
+                                        @endauth
+                                    </small>
+                                </div>
+                                <!-- Quick Actions -->
+                                <div class="dropdown">
+                                    <a class="text-muted" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fe fe-more-vertical"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        @auth
+                                            <a class="dropdown-item" href="#">
+                                                <i class="fe fe-user mr-2"></i>Perfil
+                                            </a>
+                                            <a class="dropdown-item" href="#">
+                                                <i class="fe fe-settings mr-2"></i>Configuración
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                                <i class="fe fe-log-out mr-2"></i>Cerrar Sesión
+                                            </a>
+                                            <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
+                                                @csrf
+                                            </form>
+                                        @else
+                                            <a class="dropdown-item" href="{{ route('auth.login') }}">
+                                                <i class="fe fe-log-in mr-2"></i>Iniciar Sesión
+                                            </a>
+                                        @endauth
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tools -->
+                <div class="w-100 mb-3 px-3">
+                    <div class="d-flex justify-content-between">
+                        <!-- Theme Switcher -->
+                        <button class="btn btn-sm btn-outline-secondary" id="modeSwitcher" data-mode="light" title="Cambiar tema">
+                            <i class="fe fe-sun"></i>
+                        </button>
+                        
+                        <!-- Notifications -->
+                        <button class="btn btn-sm btn-outline-secondary position-relative" data-toggle="modal" data-target=".modal-notif" title="Notificaciones">
+                            <i class="fe fe-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
+                                <span class="visually-hidden">New notifications</span>
+                            </span>
+                        </button>
+                        
+                        <!-- Sidebar Toggle for Desktop -->
+                        <button type="button" class="btn btn-sm btn-outline-secondary d-none d-lg-block collapseSidebar" title="Contraer sidebar">
+                            <i class="fe fe-menu"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Main Navigation -->
@@ -287,6 +502,63 @@
         </main>
     </div>
 
+    <!-- Notifications Modal -->
+    <div class="modal fade modal-notif modal-slide" tabindex="-1" role="dialog" aria-labelledby="defaultModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="defaultModalLabel">Notificaciones</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group list-group-flush my-n3">
+                        <div class="list-group-item bg-transparent">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="fe fe-box fe-24"></span>
+                                </div>
+                                <div class="col">
+                                    <small><strong>Nueva sesión programada</strong></small>
+                                    <div class="my-0 text-muted small">Catequesis - Grupo A</div>
+                                    <small class="badge badge-pill badge-light text-muted">Hace 1h</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item bg-transparent">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="fe fe-users fe-24"></span>
+                                </div>
+                                <div class="col">
+                                    <small><strong>5 estudiantes registrados</strong></small>
+                                    <div class="my-0 text-muted small">Sesión actual</div>
+                                    <small class="badge badge-pill badge-light text-muted">Hace 30min</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item bg-transparent">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="fe fe-bell fe-24"></span>
+                                </div>
+                                <div class="col">
+                                    <small><strong>Sistema actualizado</strong></small>
+                                    <div class="my-0 text-muted small">Nuevas funciones disponibles</div>
+                                    <small class="badge badge-pill badge-light text-muted">Ayer</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-block" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TinyDash JavaScript -->
     <script src="{{ asset('tinydash/js/jquery.min.js') }}"></script>
     <script src="{{ asset('tinydash/js/popper.min.js') }}"></script>
@@ -296,6 +568,168 @@
     <script src="{{ asset('tinydash/js/jquery.stickOnScroll.js') }}"></script>
     <script src="{{ asset('tinydash/js/config.js') }}"></script>
     <script src="{{ asset('tinydash/js/apps.js') }}"></script>
+    
+    <!-- Custom Layout JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Enhanced search functionality
+            $('.searchform').on('submit', function(e) {
+                e.preventDefault();
+                const searchTerm = $(this).find('input[type="search"]').val().trim();
+                
+                if (searchTerm.length > 0) {
+                    // Redirect to students page with search
+                    window.location.href = '{{ route("students.index") }}?search=' + encodeURIComponent(searchTerm);
+                }
+            });
+            
+            // Real-time search suggestions (optional)
+            $('.searchform input[type="search"]').on('input', function() {
+                const searchTerm = $(this).val().trim();
+                
+                if (searchTerm.length >= 2) {
+                    // Here you could implement live search suggestions
+                    console.log('Searching for:', searchTerm);
+                }
+            });
+            
+            // Mobile sidebar toggle
+            function toggleMobileSidebar() {
+                const sidebar = $('#leftSidebar');
+                const overlay = $('#sidebarOverlay');
+                
+                if ($(window).width() < 992) {
+                    console.log('Toggling mobile sidebar');
+                    
+                    if (sidebar.hasClass('show')) {
+                        // Hide sidebar
+                        sidebar.removeClass('show');
+                        sidebar.css('transform', 'translateX(-100%)');
+                        overlay.removeClass('show');
+                    } else {
+                        // Show sidebar
+                        sidebar.addClass('show');
+                        // Force style inline as backup
+                        sidebar.css({
+                            'transform': 'translateX(0px)',
+                            'display': 'block',
+                            'visibility': 'visible',
+                            'left': '0px',
+                            'z-index': '1001'
+                        });
+                        overlay.addClass('show');
+                    }
+                    
+                    console.log('Sidebar classes:', sidebar.attr('class'));
+                    console.log('Overlay classes:', overlay.attr('class'));
+                    console.log('Sidebar computed transform:', sidebar.css('transform'));
+                    console.log('Sidebar computed left:', sidebar.css('left'));
+                }
+            }
+            
+            // Mobile menu button click
+            $('#mobileMenuBtn').on('click', function(e) {
+                e.preventDefault();
+                console.log('Mobile menu button clicked');
+                toggleMobileSidebar();
+            });
+            
+            // Sidebar overlay click to close
+            $('#sidebarOverlay').on('click', function() {
+                toggleMobileSidebar();
+            });
+            
+            // Desktop sidebar collapse handling
+            $('.collapseSidebar').on('click', function(e) {
+                e.preventDefault();
+                
+                if ($(window).width() >= 992) {
+                    // Desktop behavior
+                    $('body').toggleClass('sidebar-collapsed');
+                    
+                    // Save state in localStorage
+                    const isCollapsed = $('body').hasClass('sidebar-collapsed');
+                    localStorage.setItem('sidebar-collapsed', isCollapsed);
+                } else {
+                    // Mobile behavior
+                    toggleMobileSidebar();
+                }
+            });
+            
+            // Restore sidebar state on page load (desktop only)
+            if ($(window).width() >= 992) {
+                const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+                if (sidebarCollapsed) {
+                    $('body').addClass('sidebar-collapsed');
+                }
+            }
+            
+            // Enhanced theme switcher
+            $('#modeSwitcher').on('click', function(e) {
+                e.preventDefault();
+                const currentMode = $(this).attr('data-mode');
+                const newMode = currentMode === 'light' ? 'dark' : 'light';
+                
+                // Update button
+                $(this).attr('data-mode', newMode);
+                $(this).find('i').removeClass('fe-sun fe-moon').addClass(newMode === 'light' ? 'fe-sun' : 'fe-moon');
+                
+                // Update body class
+                $('body').removeClass('light dark').addClass(newMode);
+                
+                // Toggle CSS files
+                if (newMode === 'dark') {
+                    $('#lightTheme').prop('disabled', true);
+                    $('#darkTheme').prop('disabled', false);
+                } else {
+                    $('#lightTheme').prop('disabled', false);
+                    $('#darkTheme').prop('disabled', true);
+                }
+                
+                // Save preference
+                localStorage.setItem('theme', newMode);
+            });
+            
+            // Restore theme on page load
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                $('#modeSwitcher').click();
+            }
+            
+            console.log('Enhanced sidebar layout with mobile support initialized');
+            
+            // Initialize mobile sidebar state
+            function initializeMobileSidebar() {
+                if ($(window).width() < 992) {
+                    $('#leftSidebar').removeClass('show');
+                    $('#sidebarOverlay').removeClass('show');
+                    console.log('Mobile sidebar initialized - hidden state');
+                }
+            }
+            
+            // Initialize on load
+            initializeMobileSidebar();
+            
+            // Re-initialize on window resize
+            $(window).on('resize', function() {
+                initializeMobileSidebar();
+                
+                if ($(window).width() >= 992) {
+                    // Desktop: hide overlay and reset mobile classes
+                    $('#sidebarOverlay').removeClass('show');
+                    $('#leftSidebar').removeClass('show');
+                    console.log('Switched to desktop mode');
+                }
+            });
+            
+            // Close mobile sidebar when clicking on main content
+            $('.main-content').on('click', function(e) {
+                if ($(window).width() < 992 && $('#leftSidebar').hasClass('show')) {
+                    toggleMobileSidebar();
+                }
+            });
+        });
+    </script>
     
     <!-- Laravel Mix JS -->
     @vite(['resources/js/app.js'])
