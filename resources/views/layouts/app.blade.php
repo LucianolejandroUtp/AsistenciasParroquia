@@ -156,11 +156,6 @@
             color: #495057;
         }
         
-        /* Search form styling */
-        .sidebar-left .searchform .form-control {
-            font-size: 0.875rem;
-        }
-        
         /* Notification badge */
         .btn .position-absolute {
             top: -2px !important;
@@ -214,28 +209,12 @@
                 <div class="w-100 mb-4 d-flex">
                     <a class="navbar-brand mx-auto mt-2 flex-fill text-center" href="{{ route('dashboard') }}">
                         <div class="d-flex flex-column align-items-center">
-                            <i class="fe fe-heart fe-24 text-primary mb-1"></i>
+                            <i class="fe fe-user-check fe-24 text-primary mb-1"></i>
                             <small class="text-muted text-center">
-                                <strong>Primera</strong><br>
-                                <strong>Comunión</strong>
+                                <strong>Asistencia</strong>
                             </small>
                         </div>
                     </a>
-                </div>
-
-                <!-- Search Bar -->
-                <div class="w-100 mb-3 px-3">
-                    <form class="searchform">
-                        <div class="input-group">
-                            <input class="form-control form-control-sm bg-light border-0" type="search" 
-                                   placeholder="Buscar estudiante..." aria-label="Search">
-                            <div class="input-group-append">
-                                <button class="btn btn-sm btn-light border-0" type="submit">
-                                    <i class="fe fe-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
 
                 <!-- User Profile Section -->
@@ -572,27 +551,6 @@
     <!-- Custom Layout JavaScript -->
     <script>
         $(document).ready(function() {
-            // Enhanced search functionality
-            $('.searchform').on('submit', function(e) {
-                e.preventDefault();
-                const searchTerm = $(this).find('input[type="search"]').val().trim();
-                
-                if (searchTerm.length > 0) {
-                    // Redirect to students page with search
-                    window.location.href = '{{ route("students.index") }}?search=' + encodeURIComponent(searchTerm);
-                }
-            });
-            
-            // Real-time search suggestions (optional)
-            $('.searchform input[type="search"]').on('input', function() {
-                const searchTerm = $(this).val().trim();
-                
-                if (searchTerm.length >= 2) {
-                    // Here you could implement live search suggestions
-                    console.log('Searching for:', searchTerm);
-                }
-            });
-            
             // Mobile sidebar toggle
             function toggleMobileSidebar() {
                 const sidebar = $('#leftSidebar');
