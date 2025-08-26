@@ -15,20 +15,11 @@
 @section('content')
 <div class="container-fluid">
 
-<!-- Selección de Sesión -->
+<!-- Selección de Sesión y Estadísticas -->
 <div class="row mb-4">
-    <div class="col-12">
+    <!-- Información de la Sesión -->
+    <div class="col-12 col-lg-8">
         <div class="card">
-            <!--<div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h4 class="card-header-title">
-                            <i class="fe fe-calendar mr-2"></i>
-                            Seleccionar Sesión de Catequesis
-                        </h4>
-                    </div>
-                </div>
-            </div>-->
             <div class="card-body">
                 @if($selectedSession)
                     <!-- Información de la sesión seleccionada -->
@@ -47,11 +38,6 @@
                                     <i class="fe fe-clock mr-1"></i>
                                     {{ $selectedSession->time ? $selectedSession->time->format('H:i') : 'Sin hora' }}
                                 </span>
-                                <!-- <span class="badge badge-{{ $selectedSession->status === 'active' ? 'success' : 'secondary' }} mr-2 mb-1">
-                                    <i class="fe fe-{{ $selectedSession->status === 'active' ? 'play' : 'pause' }}-circle mr-1"></i>
-                                    {{ ucfirst($selectedSession->status) }}
-                                </span>
-                                -->
                                 <span class="badge badge-success mr-2 mb-1">
                                     <i class="fe fe-check-circle mr-1"></i>
                                     Sesión Activa
@@ -60,10 +46,10 @@
                         </div>
                         <div class="col-md-6 text-md-right">
                             <div class="btn-group" role="group">
-                                <button class="btn btn-warning btn-lg" data-toggle="modal" data-target="#changeSessionModal">
+                                <button class="btn btn-warning" data-toggle="modal" data-target="#changeSessionModal">
                                     <i class="fe fe-refresh-cw mr-2"></i>Cambiar Sesión
                                 </button>
-                                <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-info btn-lg">
+                                <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-info">
                                     <i class="fe fe-users mr-2"></i>Registro Manual
                                 </a>
                             </div>
@@ -83,43 +69,59 @@
             </div>
         </div>
     </div>
-</div>
 
-@if($selectedSession)
-<!-- Estadísticas de Escaneo -->
-<div class="row mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card text-center">
+    @if($selectedSession)
+    <!-- Estadísticas de Escaneo -->
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
             <div class="card-body">
-                <span class="h3 mb-0 text-success">{{ $scanStats->total_scans }}</span>
-                <p class="small text-muted mb-0">Total Escaneos</p>
+                @if($scanStats->total_scans > 0)
+                    <div class="text-center mb-2">
+                        <div class="h3 mb-0 text-primary">{{ $scanStats->scan_rate }}%</div>
+                        <small class="text-muted">Tasa de Éxito</small>
+                    </div>
+
+                    @php
+                        $successPercent = ($scanStats->successful_scans / $scanStats->total_scans) * 100;
+                        $errorPercent = ($scanStats->error_scans / $scanStats->total_scans) * 100;
+                    @endphp
+
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-success" 
+                             style="width: {{ round($successPercent, 2) }}%"
+                             data-bs-toggle="tooltip" title="Exitosos: {{ $scanStats->successful_scans }}">
+                        </div>
+                        <div class="progress-bar bg-danger" 
+                             style="width: {{ round($errorPercent, 2) }}%"
+                             data-bs-toggle="tooltip" title="Errores: {{ $scanStats->error_scans }}">
+                        </div>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h6 mb-0 text-info">{{ $scanStats->total_scans }}</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h6 mb-0 text-success">{{ $scanStats->successful_scans }}</div>
+                            <small class="text-muted">Exitosos</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h6 mb-0 text-danger">{{ $scanStats->error_scans }}</div>
+                            <small class="text-muted">Errores</small>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center text-muted">
+                        <i class="fe fe-activity" style="font-size: 1.5rem; margin-right: 0.5rem;"></i>
+                        <p class="mt-2 mb-0 small">Sin escaneos</p>
+                        <small>Comience escaneando códigos QR.</small>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <span class="h3 mb-0 text-primary">{{ $scanStats->successful_scans }}</span>
-                <p class="small text-muted mb-0">Exitosos</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <span class="h3 mb-0 text-danger">{{ $scanStats->error_scans }}</span>
-                <p class="small text-muted mb-0">Errores</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <span class="h3 mb-0 text-info">{{ $scanStats->scan_rate }}%</span>
-                <p class="small text-muted mb-0">Tasa de Éxito</p>
-            </div>
-        </div>
-    </div>
+    @endif
 </div>
 
 <div class="row">
@@ -274,7 +276,6 @@
         </div>
     </div>
 </div>
-@endif
 
 </div>
 
