@@ -138,11 +138,6 @@
             justify-content: center;
         }
         
-        .sidebar-collapsed .card,
-        .sidebar-collapsed .btn-outline-secondary {
-            display: none;
-        }
-        
         /* Enhanced sidebar styling */
         .sidebar-left {
             width: 240px;
@@ -237,62 +232,6 @@
                     </a>
                 </div>
 
-                <!-- User Profile Section -->
-                <div class="w-100 mb-3 px-3">
-                    <div class="card border-0 bg-light">
-                        <div class="card-body p-2">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar avatar-sm mr-2">
-                                    <img src="{{ asset('tinydash/assets/avatars/face-1.jpg') }}" alt="..." class="avatar-img rounded-circle">
-                                </div>
-                                <div class="flex-fill">
-                                    <h6 class="mb-0 text-dark small">
-                                        @auth
-                                            {{ auth()->user()->name ?? 'Usuario' }}
-                                        @else
-                                            Invitado
-                                        @endauth
-                                    </h6>
-                                    <small class="text-muted">
-                                        @auth
-                                            {{ auth()->user()->userType->name ?? 'Usuario' }}
-                                        @else
-                                            No autenticado
-                                        @endauth
-                                    </small>
-                                </div>
-                                <!-- Quick Actions -->
-                                <div class="dropdown">
-                                    <a class="text-muted" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fe fe-more-vertical"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        @auth
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fe fe-user mr-2"></i>Perfil
-                                            </a>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fe fe-settings mr-2"></i>Configuración
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                                <i class="fe fe-log-out mr-2"></i>Cerrar Sesión
-                                            </a>
-                                            <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
-                                                @csrf
-                                            </form>
-                                        @else
-                                            <a class="dropdown-item" href="{{ route('auth.login') }}">
-                                                <i class="fe fe-log-in mr-2"></i>Iniciar Sesión
-                                            </a>
-                                        @endauth
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Quick Tools -->
                 <div class="w-100 mb-3 px-3">
                     <div class="d-flex justify-content-between">
@@ -318,6 +257,72 @@
 
                 <!-- Main Navigation -->
                 <ul class="navbar-nav flex-fill w-100 mb-2">
+                    <!-- User Profile Section -->
+                    <li class="nav-item dropdown">
+                        <a href="#userProfile" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
+                            <i class="fe fe-user fe-16"></i>
+                            <span class="ml-3 item-text">
+                                @auth
+                                    {{ auth()->user()->userType->name ?? 'Usuario' }}
+                                @else
+                                    Invitado
+                                @endauth
+                            </span>
+                        </a>
+                        <ul class="collapse list-unstyled pl-4 w-100" id="userProfile">
+                            <li class="nav-item">
+                                <div class="d-flex align-items-center px-3 py-2">
+                                    <div class="mr-2">
+                                        <i class="fe fe-user fe-16 text-muted"></i>
+                                    </div>
+                                    <div class="flex-fill">
+                                        <small class="text-muted d-block">
+                                            @auth
+                                                {{ auth()->user()->email ?? 'Sin email' }}
+                                            @else
+                                                No autenticado
+                                            @endauth
+                                        </small>
+                                    </div>
+                                </div>
+                            </li>
+                            @auth
+                                <li class="nav-item">
+                                    <a class="nav-link pl-3" href="#">
+                                        <span class="ml-1 item-text">
+                                            <i class="fe fe-user fe-12 mr-2"></i>Perfil
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link pl-3" href="#">
+                                        <span class="ml-1 item-text">
+                                            <i class="fe fe-settings fe-12 mr-2"></i>Configuración
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link pl-3" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        <span class="ml-1 item-text">
+                                            <i class="fe fe-log-out fe-12 mr-2"></i>Cerrar Sesión
+                                        </span>
+                                    </a>
+                                    <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
+                                        @csrf
+                                    </form>
+                                </li>
+                            @else
+                                <li class="nav-item">
+                                    <a class="nav-link pl-3" href="{{ route('auth.login') }}">
+                                        <span class="ml-1 item-text">
+                                            <i class="fe fe-log-in fe-12 mr-2"></i>Iniciar Sesión
+                                        </span>
+                                    </a>
+                                </li>
+                            @endauth
+                        </ul>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                             <i class="fe fe-home fe-16"></i>
