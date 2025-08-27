@@ -38,7 +38,10 @@
             <div class="form-group col-md-4">
                 <label for="student_code">Código Estudiante</label>
                 <input type="text" class="form-control form-control-sm bg-light" id="student_code" name="student_code" value="{{ old('student_code', $student->student_code) }}" readonly>
-                <small class="form-text text-muted">Este código se genera automáticamente</small>
+                <small class="form-text text-muted">
+                    <i class="fe fe-lock text-warning mr-1"></i>
+                    Código permanente - No se regenera automáticamente
+                </small>
             </div>
             <div class="form-group col-md-4">
                 <label for="status">Estado</label>
