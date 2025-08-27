@@ -52,6 +52,66 @@ class StudentController extends Controller
     }
 
     /**
+     * Obtener datos de estudiantes para DataTables AJAX.
+     */
+    public function ajaxData(Request $request)
+    {
+        // Obtener todos los estudiantes con sus grupos y estadísticas de asistencia
+        $students = Student::with(['group', 'attendances.attendanceSession'])
+            ->orderBy('names')
+            ->orderBy('paternal_surname')
+            ->get()
+            ->map(function ($student) {
+                // Calcular estadísticas de asistencia
+                $totalSessions = $student->attendances->pluck('attendanceSession')->unique('id')->count();
+                $attendedSessions = $student->attendances->count();
+                $attendancePercentage = $totalSessions > 0 ? round(($attendedSessions / $totalSessions) * 100) : 0;
+
+                // Generar HTML para las celdas
+                $orderHtml = '<span class="badge badge-soft-primary">' . ($student->order_number ?? '-') . '</span>';
+                
+                $nameHtml = '<div><strong>' . $student->names . ' ' . $student->paternal_surname . 
+                           ($student->maternal_surname ? ' ' . $student->maternal_surname : '') . '</strong></div>';
+                
+                $groupHtml = $student->group ? 
+                    '<span class="badge badge-' . (strpos($student->group->name, 'A') !== false ? 'primary' : 'info') . '">' . 
+                    $student->group->name . '</span>' : 
+                    '<span class="badge badge-secondary">Sin Grupo</span>';
+                
+                $attendanceHtml = '<div class="d-flex align-items-center">' .
+                    '<div class="progress flex-fill mr-2" style="height: 6px;">' .
+                    '<div class="progress-bar bg-' . ($attendancePercentage >= 80 ? 'success' : ($attendancePercentage >= 60 ? 'warning' : 'danger')) . 
+                    '" style="width: ' . $attendancePercentage . '%"></div></div>' .
+                    '<span class="small text-muted">' . $attendancePercentage . '%</span></div>' .
+                    '<small class="text-muted">' . $attendedSessions . '/' . $totalSessions . ' sesiones</small>';
+                
+                $statusHtml = '<span class="badge badge-' . ($student->estado == 'ACTIVO' ? 'success' : 'secondary') . '">' . 
+                             $student->estado . '</span>';
+                
+                $actionsHtml = '<div class="btn-group btn-group-sm" role="group" aria-label="Acciones">' .
+                    '<button type="button" class="btn btn-outline-primary btn-view-details" title="Ver Detalles" data-student-id="' . $student->id . '">' .
+                    '<span class="fe fe-eye fe-12"></span></button>' .
+                    '<button type="button" class="btn btn-outline-secondary btn-edit-student" title="Editar" data-student-id="' . $student->id . '">' .
+                    '<span class="fe fe-edit-2 fe-12"></span></button>' .
+                    '<button type="button" class="btn btn-outline-info btn-view-qr" title="Ver QR" data-url="' . route('students.qr.modal', ['student' => $student->id]) . '">' .
+                    '<span class="fe fe-maximize fe-12"></span></button></div>';
+
+                return [
+                    $orderHtml,
+                    $nameHtml,
+                    $groupHtml,
+                    $attendanceHtml,
+                    $statusHtml,
+                    $actionsHtml
+                ];
+            });
+
+        return response()->json([
+            'data' => $students
+        ]);
+    }
+
+    /**
      * Crear un nuevo estudiante.
      */
     public function store(Request $request)
@@ -100,11 +160,11 @@ class StudentController extends Controller
         // Los campos student_code, unique_id, estado, created_at, updated_at se manejan automáticamente
         $student->save();
 
-        // Generar código QR automáticamente (puedes implementar lógica específica aquí)
+        // Generar código QR automáticamente usando el mismo algoritmo del seeder
         if (!$student->student_code) {
             $group = Group::find($data['group_id']);
             $groupCode = $group ? $group->code : 'X';
-            $student->student_code = $groupCode . '-' . str_pad($data['order_number'], 2, '0', STR_PAD_LEFT);
+            $student->student_code = $this->generateStudentCode($groupCode, $data['names'], $data['paternal_surname'], $data['maternal_surname'] ?? '');
             $student->save();
         }
 
@@ -301,5 +361,88 @@ class StudentController extends Controller
 
         // Fallback: redirigir a la lista de estudiantes
         return redirect()->route('students.index');
+    }
+
+    /**
+     * Normaliza el texto removiendo tildes pero manteniendo eñes
+     */
+    private function normalizeText($text): string
+    {
+        $search = ['á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú',
+                  'à', 'è', 'ì', 'ò', 'ù', 'À', 'È', 'Ì', 'Ò', 'Ù',
+                  'ä', 'ë', 'ï', 'ö', 'ü', 'Ä', 'Ë', 'Ï', 'Ö', 'Ü'];
+        $replace = ['a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U',
+                   'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U',
+                   'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'];
+        
+        return str_replace($search, $replace, $text);
+    }
+
+    /**
+     * Extrae la primera sílaba de una palabra
+     */
+    private function getFirstSyllable($word): string
+    {
+        $word = $this->normalizeText(trim($word));
+        
+        // Si hay espacio, cortar en el primer espacio (para apellidos compuestos)
+        $spacePos = strpos($word, ' ');
+        if ($spacePos !== false) {
+            $word = substr($word, 0, $spacePos);
+        }
+        
+        // Solo vocales básicas sin tildes
+        $vowels = ['A', 'E', 'I', 'O', 'U', 'a', 'e', 'i', 'o', 'u'];
+        
+        $syllable = '';
+        $vowelCount = 0;
+        
+        // Usar funciones multibyte para manejar caracteres UTF-8 correctamente
+        $length = mb_strlen($word);
+        for ($i = 0; $i < $length; $i++) {
+            $char = mb_substr($word, $i, 1);
+            
+            if (in_array($char, $vowels)) {
+                $vowelCount++;
+                // Si esta es la segunda vocal, cortamos SIN incluirla
+                if ($vowelCount == 2) {
+                    break;
+                }
+            }
+            
+            // Solo incluir el carácter si no es la segunda vocal
+            $syllable .= $char;
+        }
+        
+        return $this->toUpperCase($syllable);
+    }
+    
+    /**
+     * Convierte texto a mayúsculas manejando correctamente la Ñ
+     */
+    private function toUpperCase($text): string
+    {
+        return str_replace('ñ', 'Ñ', strtoupper($text));
+    }
+    
+    /**
+     * Extrae el primer nombre (antes del primer espacio)
+     */
+    private function getFirstName($fullName): string
+    {
+        $names = explode(' ', trim($fullName));
+        return $this->toUpperCase($this->normalizeText($names[0]));
+    }
+    
+    /**
+     * Genera el código de estudiante basado en sílabas
+     */
+    private function generateStudentCode($groupCode, $names, $paternalSurname, $maternalSurname): string
+    {
+        $firstName = $this->getFirstName($names);
+        $paternalSyllable = $this->getFirstSyllable($paternalSurname);
+        $maternalSyllable = $this->getFirstSyllable($maternalSurname);
+        
+        return "{$groupCode}-{$firstName}-{$paternalSyllable}-{$maternalSyllable}";
     }
 }

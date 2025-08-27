@@ -75,60 +75,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($students as $student)
-                    <tr>
-                        <td>
-                            <span class="badge badge-soft-primary">{{ $student->order_number ?? '-' }}</span>
-                        </td>
-                        <td>
-                            <div>
-                                <strong>{{ $student->full_name }}</strong>
-                            </div>
-                        </td>
-                        <td>
-                            @if($student->group_name !== 'Sin Grupo')
-                                <span class="badge badge-{{ strpos($student->group_name, 'A') !== false ? 'primary' : 'info' }}">
-                                    {{ $student->group_name }}
-                                </span>
-                            @else
-                                <span class="badge badge-secondary">Sin Grupo</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="progress flex-fill mr-2" style="height: 6px;">
-                                    <div class="progress-bar bg-{{ $student->attendance_percentage >= 80 ? 'success' : ($student->attendance_percentage >= 60 ? 'warning' : 'danger') }}" 
-                                         style="width: {{ $student->attendance_percentage }}%"></div>
-                                </div>
-                                <span class="small text-muted">{{ $student->attendance_percentage }}%</span>
-                            </div>
-                            <small class="text-muted">{{ $student->attended_sessions }}/{{ $student->total_sessions }} sesiones</small>
-                        </td>
-                        <td>
-                            <span class="badge badge-{{ $student->status == 'ACTIVO' ? 'success' : 'secondary' }}">
-                                {{ $student->status }}
-                            </span>
-                        </td>
-                        <!-- Columna 'Registro' removida -->
-                        <td class="text-right">
-                            <div class="btn-group btn-group-sm" role="group" aria-label="Acciones">
-                                <button type="button" class="btn btn-outline-primary btn-view-details" title="Ver Detalles" data-student-id="{{ $student->id }}">
-                                    <span class="fe fe-eye fe-12"></span>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-edit-student" title="Editar" data-student-id="{{ $student->id }}">
-                                    <span class="fe fe-edit-2 fe-12"></span>
-                                </button>
-                                    <button type="button" class="btn btn-outline-info btn-view-qr" title="Ver QR" data-url="{{ route('students.qr.modal', ['student' => $student->id]) }}">
-                                        <span class="fe fe-maximize fe-12"></span>
-                                    </button>
-                            <!--    <button type="button" class="btn btn-outline-warning" title="Historial">
-                                    <span class="fe fe-bar-chart-2 fe-12"></span>
-                                </button>
-                                -->
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
+                    <!-- Los datos se cargarán vía AJAX -->
                 </tbody>
             </table>
         </div>
@@ -289,8 +236,15 @@ document.addEventListener('click', function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar DataTables
+    // Inicializar DataTables con AJAX
     var table = $('#studentsDataTable').DataTable({
+        "ajax": {
+            "url": "{{ route('students.ajax.data') }}",
+            "type": "GET",
+            "dataSrc": "data"
+        },
+        "processing": true,
+        "serverSide": false,
         autoWidth: true,
         responsive: true,
         "language": {
@@ -307,7 +261,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 "previous": "Anterior"
             },
             "emptyTable": "No hay datos disponibles en la tabla",
-            "processing": "Procesando..."
+            "processing": "Procesando...",
+            "loadingRecords": "Cargando registros..."
         },
         "lengthMenu": [
             [10, 25, 50, 100, -1],
@@ -759,11 +714,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Mostrar mensaje de éxito
                 showToast(response.message || 'Estudiante creado correctamente', 'success');
                 
-                // Recargar la página para mostrar el nuevo estudiante
-                // (DataTable no usa AJAX, necesita refrescar toda la página)
-                setTimeout(function() {
-                    window.location.reload();
-                }, 1500);
+                // Recargar DataTable para mostrar el nuevo estudiante
+                $('#studentsDataTable').DataTable().ajax.reload(null, false);
                 
                 // Resetear formulario
                 resetCreateForm();

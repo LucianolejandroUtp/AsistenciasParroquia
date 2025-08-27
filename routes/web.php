@@ -126,6 +126,9 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/', [StudentController::class, 'index'])->name('index');
         Route::get('/qr-codes', [StudentController::class, 'qrCodes'])->name('qr-codes');
         
+        // AJAX endpoint para DataTables
+        Route::get('/ajax-data', [StudentController::class, 'ajaxData'])->name('ajax.data');
+        
         // Detalles (AJAX partial)
         Route::get('/{student}/details', [StudentController::class, 'details'])->name('details');
 
