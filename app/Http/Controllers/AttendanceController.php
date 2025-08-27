@@ -190,14 +190,26 @@ class AttendanceController extends Controller
                     ];
                 });
 
-            // Estadísticas de escaneo (asumiendo que todos los registros son exitosos)
-            $totalScans = Attendance::where('attendance_session_id', $selectedSession->id)->count();
+            // Estadísticas reales de la base de datos
+            $totalStudents = Student::where('estado', 'ACTIVO')->count();
+            $attendanceCount = Attendance::where('attendance_session_id', $selectedSession->id)->count();
+            
+            // Calcular errores basados en registros duplicados o intentos fallidos
+            // (por simplicidad, asumimos que todos los registros en BD son exitosos)
             $scanStats = (object) [
-                'total_scans' => $totalScans,
-                'successful_scans' => $totalScans,
-                'error_scans' => 0,
-                'scan_rate' => $totalScans > 0 ? 100 : 0
+                'total_scans' => $attendanceCount,
+                'successful_scans' => $attendanceCount,
+                'error_scans' => 0, // Se puede expandir para tracking de errores
+                'scan_rate' => $attendanceCount > 0 ? 100 : 0
             ];
+        }
+
+        // Si es una petición AJAX para estadísticas, devolver solo los datos
+        if ($request->get('ajax_stats') && $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'stats' => $scanStats
+            ]);
         }
 
         return view('attendances.qr-scanner', compact('activeSessions', 'selectedSession', 'recentScans', 'scanStats'));

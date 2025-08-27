@@ -75,49 +75,49 @@
     <div class="col-12 col-lg-4">
         <div class="card h-100">
             <div class="card-body">
-                @if($scanStats->total_scans > 0)
-                    <div class="text-center mb-2">
-                        <div class="h3 mb-0 text-primary">{{ $scanStats->scan_rate }}%</div>
-                        <small class="text-muted">Tasa de Éxito</small>
-                    </div>
+                <!-- Siempre mostrar estructura de estadísticas -->
+                <div class="text-center mb-2">
+                    <div class="h3 mb-0 text-primary">{{ $scanStats->total_scans > 0 ? $scanStats->scan_rate : 0 }}%</div>
+                    <small class="text-muted">Tasa de Éxito</small>
+                </div>
 
-                    @php
-                        $successPercent = ($scanStats->successful_scans / $scanStats->total_scans) * 100;
-                        $errorPercent = ($scanStats->error_scans / $scanStats->total_scans) * 100;
-                    @endphp
+                @php
+                    $successPercent = $scanStats->total_scans > 0 ? ($scanStats->successful_scans / $scanStats->total_scans) * 100 : 0;
+                    $errorPercent = $scanStats->total_scans > 0 ? ($scanStats->error_scans / $scanStats->total_scans) * 100 : 0;
+                @endphp
 
-                    <div class="progress mb-2" style="height: 8px;">
-                        <div class="progress-bar bg-success" 
-                             style="width: {{ round($successPercent, 2) }}%"
-                             data-bs-toggle="tooltip" title="Exitosos: {{ $scanStats->successful_scans }}">
-                        </div>
-                        <div class="progress-bar bg-danger" 
-                             style="width: {{ round($errorPercent, 2) }}%"
-                             data-bs-toggle="tooltip" title="Errores: {{ $scanStats->error_scans }}">
-                        </div>
+                <div class="progress mb-2" style="height: 8px;">
+                    <div class="progress-bar bg-success" 
+                         style="width: {{ round($successPercent, 2) }}%"
+                         data-bs-toggle="tooltip" title="Exitosos: {{ $scanStats->successful_scans }}">
                     </div>
+                    <div class="progress-bar bg-danger" 
+                         style="width: {{ round($errorPercent, 2) }}%"
+                         data-bs-toggle="tooltip" title="Errores: {{ $scanStats->error_scans }}">
+                    </div>
+                </div>
 
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="h6 mb-0 text-info">{{ $scanStats->total_scans }}</div>
-                            <small class="text-muted">Total</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="h6 mb-0 text-success">{{ $scanStats->successful_scans }}</div>
-                            <small class="text-muted">Exitosos</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="h6 mb-0 text-danger">{{ $scanStats->error_scans }}</div>
-                            <small class="text-muted">Errores</small>
-                        </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h6 mb-0 text-info">{{ $scanStats->total_scans }}</div>
+                        <small class="text-muted">Total</small>
                     </div>
-                @else
-                    <div class="text-center text-muted">
-                        <i class="fe fe-activity" style="font-size: 1.5rem; margin-right: 0.5rem;"></i>
-                        <p class="mt-2 mb-0 small">Sin escaneos</p>
-                        <small>Comience escaneando códigos QR.</small>
+                    <div class="col-4">
+                        <div class="h6 mb-0 text-success">{{ $scanStats->successful_scans }}</div>
+                        <small class="text-muted">Exitosos</small>
                     </div>
-                @endif
+                    <div class="col-4">
+                        <div class="h6 mb-0 text-danger">{{ $scanStats->error_scans }}</div>
+                        <small class="text-muted">Errores</small>
+                    </div>
+                </div>
+
+                <!-- Mensaje inicial oculto - solo se muestra programáticamente cuando sea necesario -->
+                <div id="no-scans-message" class="text-center text-muted mt-3" style="display: none;">
+                    <i class="fe fe-activity" style="font-size: 1.5rem; margin-right: 0.5rem;"></i>
+                    <p class="mt-2 mb-0 small">Sin escaneos</p>
+                    <small>Comience escaneando códigos QR.</small>
+                </div>
             </div>
         </div>
     </div>
@@ -806,9 +806,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 showScanResult(data.data, scanMode);
                 addRecentScan(data.data);
-                updateScanStats();
+                updateScanStats(); // Obtener estadísticas reales de BD
                 showToast('Asistencia registrada: ' + data.data.student_name, 'success');
             } else {
+                // Solo actualizar estadísticas si el error indica un registro duplicado
+                // (otros errores no afectan las estadísticas de BD)
+                if (data.message && data.message.includes('ya')) {
+                    updateScanStats(); // Puede haber cambiado el conteo
+                }
                 showToast('Error: ' + data.message, 'error');
                 console.error('Error al procesar QR:', data.message);
             }
@@ -912,22 +917,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Función para obtener estadísticas reales desde la base de datos
     function updateScanStats() {
-        const totalScans = document.querySelector('.text-success.h3');
-        const successfulScans = document.querySelector('.text-primary.h3');
+        if (!sessionId) {
+            console.log('No hay sesión seleccionada para obtener estadísticas');
+            return;
+        }
         
-        if (totalScans && successfulScans) {
-            const currentTotal = parseInt(totalScans.textContent) + 1;
-            const currentSuccessful = parseInt(successfulScans.textContent) + 1;
-            
-            totalScans.textContent = currentTotal;
-            successfulScans.textContent = currentSuccessful;
-            
-            const successRate = document.querySelector('.text-info.h3');
-            if (successRate) {
-                const rate = Math.round((currentSuccessful / currentTotal) * 100);
-                successRate.textContent = rate + '%';
+        // Hacer petición AJAX para obtener estadísticas actualizadas
+        fetch(`{{ route('attendances.qr-scanner') }}?session_id=${sessionId}&ajax_stats=1`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.stats) {
+                const stats = data.stats;
+                
+                // Buscar elementos de estadísticas
+                const totalElement = document.querySelector('.h6.mb-0.text-info');
+                const successfulElement = document.querySelector('.h6.mb-0.text-success');
+                const errorsElement = document.querySelector('.h6.mb-0.text-danger');
+                const rateElement = document.querySelector('.h3.mb-0.text-primary');
+                const noScansMessage = document.getElementById('no-scans-message');
+                
+                // Actualizar valores en el DOM
+                if (totalElement) {
+                    totalElement.textContent = stats.total_scans;
+                }
+                if (successfulElement) {
+                    successfulElement.textContent = stats.successful_scans;
+                }
+                if (errorsElement) {
+                    errorsElement.textContent = stats.error_scans;
+                }
+                if (rateElement) {
+                    rateElement.textContent = stats.scan_rate + '%';
+                }
+                
+                // Manejar mensaje "Sin escaneos" - mantenerlo oculto en sesiones nuevas
+                if (noScansMessage) {
+                    // Siempre mantener oculto - las estadísticas en cero son suficientes
+                    noScansMessage.style.display = 'none';
+                }
+                
+                // Actualizar barra de progreso con datos reales
+                updateProgressBar(stats);
+                
+                console.log('Estadísticas actualizadas desde BD:', stats);
+            }
+        })
+        .catch(error => {
+            console.error('Error obteniendo estadísticas:', error);
+        });
+    }
+    
+    function updateProgressBar(stats) {
+        const successBar = document.querySelector('.progress-bar.bg-success');
+        const errorBar = document.querySelector('.progress-bar.bg-danger');
+        
+        if (stats.total_scans > 0 && successBar && errorBar) {
+            const successPercent = (stats.successful_scans / stats.total_scans) * 100;
+            const errorPercent = (stats.error_scans / stats.total_scans) * 100;
+            
+            successBar.style.width = Math.round(successPercent * 100) / 100 + '%';
+            successBar.setAttribute('title', `Exitosos: ${stats.successful_scans}`);
+            
+            errorBar.style.width = Math.round(errorPercent * 100) / 100 + '%';
+            errorBar.setAttribute('title', `Errores: ${stats.error_scans}`);
+        } else if (successBar && errorBar) {
+            // Si no hay escaneos, resetear barras
+            successBar.style.width = '0%';
+            errorBar.style.width = '0%';
         }
     }
     
@@ -958,6 +1022,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cargar cámaras disponibles al inicializar
     loadAvailableCameras();
+    
+    // Obtener estadísticas iniciales desde la base de datos
+    if (sessionId) {
+        updateScanStats();
+    }
     
     // Acciones rápidas
     const exportBtn = document.getElementById('export-session');
