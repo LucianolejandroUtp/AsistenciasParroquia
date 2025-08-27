@@ -311,7 +311,7 @@ class StudentController extends Controller
             'maternal_surname' => 'nullable|string|max:191',
             'group_id' => 'nullable|exists:groups,id',
             'order_number' => 'required|integer|min:1',
-            'student_code' => 'nullable|string|max:100|unique:students,student_code,' . $student->id,
+            // Remover student_code de la validación - no debe ser editable
             'status' => 'required|in:ACTIVO,INACTIVO,ELIMINADO'
         ]);
 
@@ -321,8 +321,16 @@ class StudentController extends Controller
         $student->maternal_surname = $data['maternal_surname'] ?? null;
         $student->group_id = $data['group_id'] ?? null;
         $student->order_number = $data['order_number'];
-        $student->student_code = $data['student_code'] ?? null;
+        // No actualizar student_code - se mantiene el existente o se regenera si es necesario
         $student->estado = $data['status'];
+        
+        // Regenerar student_code solo si los datos básicos cambiaron
+        if ($student->isDirty(['names', 'paternal_surname', 'maternal_surname', 'group_id'])) {
+            $group = Group::find($student->group_id);
+            $groupCode = $group ? $group->code : 'X';
+            $student->student_code = $this->generateStudentCode($groupCode, $student->names, $student->paternal_surname, $student->maternal_surname ?? '');
+        }
+        
         $student->save();
 
         if ($request->ajax()) {
