@@ -12,6 +12,7 @@ use App\Http\Requests\QrScanRequest;
 use App\Http\Requests\IndividualAttendanceRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AttendanceController extends Controller
 {
@@ -149,70 +150,102 @@ class AttendanceController extends Controller
      */
     public function qrScanner(Request $request)
     {
-        // Obtener sesiones activas
-        $activeSessions = AttendanceSession::where('estado', 'ACTIVO')
-            ->orderBy('date', 'desc')
-            ->orderBy('time', 'desc')
-            ->get();
+        try {
+            // Obtener sesiones activas
+            $activeSessions = AttendanceSession::where('estado', 'ACTIVO')
+                ->orderBy('date', 'desc')
+                ->orderBy('time', 'desc')
+                ->get();
 
-        // Obtener sesión seleccionada
-        $sessionId = $request->get('session_id');
-        $selectedSession = null;
-        
-        if ($sessionId) {
-            $selectedSession = AttendanceSession::findOrFail($sessionId);
-        } else {
-            $selectedSession = $activeSessions->first();
-        }
-
-        $recentScans = collect();
-        $scanStats = (object) [
-            'total_scans' => 0,
-            'successful_scans' => 0,
-            'error_scans' => 0,
-            'scan_rate' => 0
-        ];
-
-        if ($selectedSession) {
-            // Obtener escaneos recientes de la sesión (últimos 10)
-            $recentScans = Attendance::with(['student.group'])
-                ->where('attendance_session_id', $selectedSession->id)
-                ->orderBy('created_at', 'desc')
-                ->limit(10)
-                ->get()
-                ->map(function($attendance) {
-                    return (object) [
-                        'student_name' => $attendance->student->full_name,
-                        'qr_code' => $attendance->student->qr_code, // Usar accessor
-                        'scan_time' => $attendance->created_at->format('H:i'),
-                        'status' => $attendance->status,
-                        'group' => $attendance->student->group->name
-                    ];
-                });
-
-            // Estadísticas reales de la base de datos
-            $totalStudents = Student::where('estado', 'ACTIVO')->count();
-            $attendanceCount = Attendance::where('attendance_session_id', $selectedSession->id)->count();
+            // Obtener sesión seleccionada
+            $sessionId = $request->get('session_id');
+            $selectedSession = null;
             
-            // Calcular errores basados en registros duplicados o intentos fallidos
-            // (por simplicidad, asumimos que todos los registros en BD son exitosos)
+            if ($sessionId) {
+                $selectedSession = AttendanceSession::find($sessionId);
+                // Si no encuentra la sesión o no está activa, usar null
+                if (!$selectedSession || $selectedSession->estado !== 'ACTIVO') {
+                    $selectedSession = null;
+                }
+            } else {
+                $selectedSession = $activeSessions->first();
+            }
+
+            $recentScans = collect();
             $scanStats = (object) [
-                'total_scans' => $attendanceCount,
-                'successful_scans' => $attendanceCount,
-                'error_scans' => 0, // Se puede expandir para tracking de errores
-                'scan_rate' => $attendanceCount > 0 ? 100 : 0
+                'total_scans' => 0,
+                'successful_scans' => 0,
+                'error_scans' => 0,
+                'scan_rate' => 0
             ];
-        }
 
-        // Si es una petición AJAX para estadísticas, devolver solo los datos
-        if ($request->get('ajax_stats') && $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'stats' => $scanStats
+            if ($selectedSession) {
+                // Obtener escaneos recientes de la sesión (últimos 10)
+                $recentScans = Attendance::with(['student.group'])
+                    ->where('attendance_session_id', $selectedSession->id)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(10)
+                    ->get()
+                    ->map(function($attendance) {
+                        return (object) [
+                            'student_name' => $attendance->student->full_name,
+                            'qr_code' => $attendance->student->qr_code, // Usar accessor
+                            'scan_time' => $attendance->created_at->format('H:i'),
+                            'status' => $attendance->status,
+                            'group' => $attendance->student->group->name
+                        ];
+                    });
+
+                // Estadísticas reales de la base de datos
+                $totalStudents = Student::where('estado', 'ACTIVO')->count();
+                $attendanceCount = Attendance::where('attendance_session_id', $selectedSession->id)->count();
+                
+                // Calcular errores basados en registros duplicados o intentos fallidos
+                // (por simplicidad, asumimos que todos los registros en BD son exitosos)
+                $scanStats = (object) [
+                    'total_scans' => $attendanceCount,
+                    'successful_scans' => $attendanceCount,
+                    'error_scans' => 0, // Se puede expandir para tracking de errores
+                    'scan_rate' => $attendanceCount > 0 ? 100 : 0
+                ];
+            }
+
+            // Si es una petición AJAX para estadísticas, devolver solo los datos
+            if ($request->get('ajax_stats') && $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'stats' => $scanStats
+                ]);
+            }
+
+            // **VERIFICACIÓN ESPECIAL: Si no hay sesiones activas, mostrar vista simplificada**
+            if ($activeSessions->isEmpty()) {
+                return view('attendances.qr-scanner-no-sessions');
+            }
+
+            return view('attendances.qr-scanner', compact('activeSessions', 'selectedSession', 'recentScans', 'scanStats'));
+            
+        } catch (\Exception $e) {
+            // Log del error para debugging
+            Log::error('Error en QR Scanner: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
+            
+            // En caso de error, mostrar página básica sin sesión
+            return view('attendances.qr-scanner', [
+                'activeSessions' => collect(),
+                'selectedSession' => null,
+                'recentScans' => collect(),
+                'scanStats' => (object) [
+                    'total_scans' => 0,
+                    'successful_scans' => 0,
+                    'error_scans' => 0,
+                    'scan_rate' => 0
+                ]
+            ])->with('error', 'Ocurrió un error al cargar el escáner QR. Por favor, intente nuevamente.');
         }
-
-        return view('attendances.qr-scanner', compact('activeSessions', 'selectedSession', 'recentScans', 'scanStats'));
     }
 
     /**

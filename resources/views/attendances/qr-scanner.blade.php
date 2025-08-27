@@ -263,14 +263,21 @@
                         <i class="fe fe-download mr-1"></i>
                         Exportar Sesión
                     </button>
-                    <button id="finish-session" class="btn btn-outline-warning btn-block">
+                    <button id="finish-session" class="btn btn-outline-warning btn-block" {{ !$selectedSession ? 'disabled' : '' }}>
                         <i class="fe fe-check-square mr-1"></i>
                         Finalizar Sesión
                     </button>
-                    <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-outline-info btn-block">
-                        <i class="fe fe-users mr-1"></i>
-                        Registro Manual
-                    </a>
+                    @if($selectedSession)
+                        <a href="{{ route('attendances.register', ['session_id' => $selectedSession->id]) }}" class="btn btn-outline-info btn-block">
+                            <i class="fe fe-users mr-1"></i>
+                            Registro Manual
+                        </a>
+                    @else
+                        <button class="btn btn-outline-info btn-block" disabled>
+                            <i class="fe fe-users mr-1"></i>
+                            Registro Manual
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -313,7 +320,7 @@
                         <i class="fe fe-alert-triangle mb-3 text-warning" style="font-size: 48px;"></i>
                         <h5>No hay sesiones activas</h5>
                         <p class="text-muted">No se encontraron sesiones de catequesis activas para hoy.</p>
-                        <a href="{{ route('attendance-sessions.create') }}" class="btn btn-primary">
+                        <a href="{{ route('sessions.create') }}" class="btn btn-primary">
                             <i class="fe fe-plus mr-1"></i>Crear Nueva Sesión
                         </a>
                     </div>
@@ -1039,11 +1046,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const finishBtn = document.getElementById('finish-session');
     if (finishBtn) {
         finishBtn.addEventListener('click', function() {
+            if (!sessionId) {
+                showToast('No hay sesión seleccionada para finalizar', 'warning');
+                return;
+            }
             if (confirm('¿Finalizar la sesión actual? No podrá registrar más asistencias.')) {
                 // Crear un formulario para cerrar la sesión
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '{{ route("sessions.close", $selectedSession->id ?? "") }}';
+                form.action = '/AsistenciasParroquia/public/sessions/' + sessionId + '/close';
                 
                 const csrfToken = document.createElement('input');
                 csrfToken.type = 'hidden';
