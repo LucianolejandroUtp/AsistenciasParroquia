@@ -9,10 +9,14 @@ use Illuminate\Support\Facades\DB;
 class StudentSeeder extends Seeder
 {
     /**
-     * Normaliza el texto removiendo tildes pero manteniendo eñes
+     * Normaliza el texto removiendo tildes y convirtiendo ñ a ni
      */
     private function normalizeText($text): string
     {
+        // Primero convertir ñ/Ñ a ni/NI para evitar caracteres especiales en códigos QR
+        $text = str_replace(['ñ', 'Ñ'], ['ni', 'NI'], $text);
+        
+        // Luego remover tildes y otros acentos
         $search = ['á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú',
                   'à', 'è', 'ì', 'ò', 'ù', 'À', 'È', 'Ì', 'Ò', 'Ù',
                   'ä', 'ë', 'ï', 'ö', 'ü', 'Ä', 'Ë', 'Ï', 'Ö', 'Ü'];
@@ -63,11 +67,12 @@ class StudentSeeder extends Seeder
     }
     
     /**
-     * Convierte texto a mayúsculas manejando correctamente la Ñ
+     * Convierte texto a mayúsculas manejando caracteres normalizados
      */
     private function toUpperCase($text): string
     {
-        return str_replace('ñ', 'Ñ', strtoupper($text));
+        // Ya no necesitamos manejar ñ especialmente porque se convierte a ni
+        return strtoupper($text);
     }
     
     /**

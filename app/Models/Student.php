@@ -214,24 +214,29 @@ class Student extends Model
     }
 
     /**
-     * Normalize text by removing accents and handling special characters.
+     * Normalize text by removing accents and converting special characters.
      */
     private function normalizeText(string $text): string
     {
         $text = trim($text);
         
-        // Handle accented characters
+        // Convert ñ/Ñ to ni/NI to avoid special characters in QR codes
+        $text = str_replace(['ñ', 'Ñ'], ['ni', 'NI'], $text);
+        
+        // Handle other accented characters
         $accents = [
             'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
             'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
-            'ü' => 'u', 'Ü' => 'U'
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'À' => 'A', 'È' => 'E', 'Ì' => 'I', 'Ò' => 'O', 'Ù' => 'U',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'Ä' => 'A', 'Ë' => 'E', 'Ï' => 'I', 'Ö' => 'O', 'Ü' => 'U'
         ];
 
         foreach ($accents as $accent => $replacement) {
             $text = str_replace($accent, $replacement, $text);
         }
 
-        // Preserve ñ as it's important in Spanish names
         return $text;
     }
 
