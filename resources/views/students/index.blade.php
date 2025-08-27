@@ -20,7 +20,7 @@
     <div class="card-body">
         <!-- Filtros del DataTable -->
         <div class="row mb-3">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select id="groupFilter" class="form-control form-control-sm">
                     <option value="">Grupos</option>
                     @foreach($groups as $group)
@@ -28,14 +28,14 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select id="statusFilter" class="form-control form-control-sm">
                     <option value="">Estados</option>
                     <option value="ACTIVO">Activo</option>
                     <option value="INACTIVO">Inactivo</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select id="attendanceFilter" class="form-control form-control-sm">
                     <option value="">Niveles</option>
                     <option value="high">Alta (≥90%)</option>
@@ -43,15 +43,19 @@
                     <option value="low">Baja (<70%)</option>
                 </select>
             </div>
-            <div class="col-md-3 d-flex align-items-center justify-content-end">
+            <div class="col-md-6 d-flex align-items-center justify-content-end">
                 <div class="w-100 d-flex justify-content-end" style="gap:8px;">
                     <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary">
                         <i class="fe fe-x-circle me-1"></i>
-                        <span class="d-none d-sm-inline">Limpiar Filtros</span>
+                        <span class="d-none d-sm-inline">Limpiar</span>
                     </button>
 
                     <button id="exportListBtn" class="btn btn-sm btn-primary" type="button">
-                        <span class="fe fe-download fe-12 mr-2"></span>Exportar Lista
+                        <span class="fe fe-download fe-12 mr-2"></span>Exportar
+                    </button>
+
+                    <button id="createStudentBtn" class="btn btn-sm btn-success" type="button" data-toggle="modal" data-target="#createStudentModal">
+                        <span class="fe fe-plus fe-12 mr-2"></span>Crear
                     </button>
                 </div>
             </div>
@@ -151,6 +155,91 @@
     </div>
 </div>
 @endsection
+
+<!-- Modal para Crear Nuevo Estudiante -->
+<div class="modal fade" id="createStudentModal" tabindex="-1" role="dialog" aria-labelledby="createStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createStudentModalLabel">
+                    <i class="fe fe-user-plus mr-2"></i>Crear Nuevo Estudiante
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createStudentForm" action="{{ route('students.store') }}" method="POST">
+                    @csrf
+                    
+                    <!-- Alert container for validation errors -->
+                    <div id="createStudentFormErrors" class="alert alert-danger d-none" role="alert">
+                        <ul class="mb-0"></ul>
+                    </div>
+
+                    <div class="row">
+                        <!-- Nombres -->
+                        <div class="col-md-12 mb-3">
+                            <label for="names" class="form-label">Nombres <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="names" name="names" placeholder="Ej: Juan Carlos" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <!-- Apellidos -->
+                        <div class="col-md-6 mb-3">
+                            <label for="paternal_surname" class="form-label">Apellido Paterno <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="paternal_surname" name="paternal_surname" placeholder="Ej: García" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="maternal_surname" class="form-label">Apellido Materno</label>
+                            <input type="text" class="form-control" id="maternal_surname" name="maternal_surname" placeholder="Ej: López">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <!-- Grupo -->
+                        <div class="col-md-6 mb-3">
+                            <label for="group_id" class="form-label">Grupo <span class="text-danger">*</span></label>
+                            <select class="form-control" id="group_id" name="group_id" required>
+                                <option value="">Seleccionar grupo...</option>
+                                @foreach($groups as $group)
+                                    @if($group->estado === 'ACTIVO')
+                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <!-- Número de Orden -->
+                        <div class="col-md-6 mb-3">
+                            <label for="order_number" class="form-label">Número de Orden <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="order_number" name="order_number" 
+                                   placeholder="Ej: 1" min="1" max="100" required>
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">Número único dentro del grupo (1-100)</small>
+                        </div>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="alert alert-info" role="alert">
+                        <i class="fe fe-info mr-2"></i>
+                        <strong>Nota:</strong> El código QR del estudiante se generará automáticamente una vez creado el registro.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fe fe-x mr-1"></i>Cancelar
+                </button>
+                <button type="submit" form="createStudentForm" class="btn btn-success" id="createStudentSubmitBtn">
+                    <i class="fe fe-save mr-1"></i>Crear Estudiante
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section('additional-js')
 <script src="{{ asset('tinydash/js/jquery.dataTables.min.js') }}"></script>
@@ -595,6 +684,128 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         $(this).removeData('lastActive');
     });
+});
+</script>
+
+<!-- JavaScript para Crear Nuevo Estudiante -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const $createModal = $('#createStudentModal');
+    const $createForm = $('#createStudentForm');
+    const $submitBtn = $('#createStudentSubmitBtn');
+    const $errorsContainer = $('#createStudentFormErrors');
+
+    // Función para limpiar errores de validación
+    function clearValidationErrors() {
+        $errorsContainer.addClass('d-none').find('ul').empty();
+        $createForm.find('.is-invalid').removeClass('is-invalid');
+        $createForm.find('.invalid-feedback').text('');
+    }
+
+    // Función para mostrar errores de validación
+    function showValidationErrors(errors) {
+        $errorsContainer.removeClass('d-none');
+        const $errorsList = $errorsContainer.find('ul');
+        $errorsList.empty();
+
+        Object.keys(errors).forEach(function(field) {
+            const fieldErrors = errors[field];
+            fieldErrors.forEach(function(error) {
+                $errorsList.append('<li>' + error + '</li>');
+            });
+
+            // Marcar campo específico como inválido
+            const $field = $createForm.find('[name="' + field + '"]');
+            $field.addClass('is-invalid');
+            $field.siblings('.invalid-feedback').text(fieldErrors[0]);
+        });
+    }
+
+    // Función para resetear el formulario
+    function resetCreateForm() {
+        $createForm[0].reset();
+        clearValidationErrors();
+        $submitBtn.prop('disabled', false).html('<i class="fe fe-save mr-1"></i>Crear Estudiante');
+    }
+
+    // Event: Al abrir el modal, resetear formulario
+    $createModal.on('show.bs.modal', function() {
+        resetCreateForm();
+    });
+
+    // Event: Submit del formulario (AJAX)
+    $createForm.on('submit', function(e) {
+        e.preventDefault();
+        
+        // Deshabilitar botón para evitar doble submit
+        $submitBtn.prop('disabled', true).html('<i class="fe fe-loader mr-1"></i>Creando...');
+        
+        // Limpiar errores previos
+        clearValidationErrors();
+
+        // Obtener datos del formulario
+        const formData = $createForm.serialize();
+        const actionUrl = $createForm.attr('action');
+
+        // Enviar petición AJAX
+        $.ajax({
+            url: actionUrl,
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                // Cerrar modal
+                $createModal.modal('hide');
+                
+                // Mostrar mensaje de éxito
+                showToast(response.message || 'Estudiante creado correctamente', 'success');
+                
+                // Recargar la página para mostrar el nuevo estudiante
+                // (DataTable no usa AJAX, necesita refrescar toda la página)
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+                
+                // Resetear formulario
+                resetCreateForm();
+            },
+            error: function(xhr) {
+                // Re-habilitar botón
+                $submitBtn.prop('disabled', false).html('<i class="fe fe-save mr-1"></i>Crear Estudiante');
+                
+                if (xhr.status === 422) {
+                    // Errores de validación
+                    const errors = xhr.responseJSON.errors || {};
+                    showValidationErrors(errors);
+                    showToast('Por favor corrige los errores en el formulario', 'warning');
+                } else if (xhr.status === 409) {
+                    // Conflicto (ej: número de orden duplicado)
+                    const message = xhr.responseJSON.message || 'Ya existe un estudiante con este número de orden en el grupo seleccionado';
+                    showToast(message, 'warning');
+                } else {
+                    // Error general
+                    const message = xhr.responseJSON.message || 'Ocurrió un error al crear el estudiante';
+                    showToast(message, 'danger');
+                    console.error('Error creating student:', xhr);
+                }
+            }
+        });
+    });
+
+    // Event: Cambio de grupo - sugerir siguiente número disponible
+    $('#group_id').on('change', function() {
+        const groupId = $(this).val();
+        if (!groupId) {
+            $('#order_number').val('');
+            return;
+        }
+
+        // Obtener el siguiente número disponible para este grupo
+        // (Esto es opcional - podrías implementar un endpoint para esto)
+        // Por simplicidad, dejaré que el usuario ingrese manualmente
+        $('#order_number').focus();
+    });
+
+    console.log('Create Student modal functionality initialized');
 });
 </script>
 @endsection

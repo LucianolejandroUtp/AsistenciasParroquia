@@ -51,9 +51,82 @@ class StudentController extends Controller
         return view('students.index', compact('students', 'groups'));
     }
 
+    /**
+     * Crear un nuevo estudiante.
+     */
+    public function store(Request $request)
+    {
+        // Validar datos de entrada usando nombres exactos de la migración
+        $data = $request->validate([
+            'names' => 'required|string|max:191',
+            'paternal_surname' => 'required|string|max:191',
+            'maternal_surname' => 'nullable|string|max:191',
+            'group_id' => 'required|exists:groups,id',
+            'order_number' => 'required|integer|min:1|max:100',
+        ], [
+            'names.required' => 'Los nombres son obligatorios',
+            'paternal_surname.required' => 'El apellido paterno es obligatorio',
+            'group_id.required' => 'Debe seleccionar un grupo',
+            'group_id.exists' => 'El grupo seleccionado no es válido',
+            'order_number.required' => 'El número de orden es obligatorio',
+            'order_number.min' => 'El número de orden debe ser mayor a 0',
+            'order_number.max' => 'El número de orden no puede ser mayor a 100',
+        ]);
 
+        // Verificar que el número de orden no esté duplicado en el grupo
+        $exists = Student::where('group_id', $data['group_id'])
+                         ->where('order_number', $data['order_number'])
+                         ->where('estado', '!=', 'ELIMINADO')
+                         ->exists();
 
+        if ($exists) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'message' => 'Ya existe un estudiante con este número de orden en el grupo seleccionado'
+                ], 409);
+            }
+            return back()->withErrors([
+                'order_number' => 'Ya existe un estudiante con este número de orden en el grupo seleccionado'
+            ])->withInput();
+        }
 
+        // Crear el estudiante usando los campos exactos de la migración
+        $student = new Student();
+        $student->names = $data['names'];
+        $student->paternal_surname = $data['paternal_surname'];
+        $student->maternal_surname = $data['maternal_surname'] ?? null;
+        $student->group_id = $data['group_id'];
+        $student->order_number = $data['order_number'];
+        // Los campos student_code, unique_id, estado, created_at, updated_at se manejan automáticamente
+        $student->save();
+
+        // Generar código QR automáticamente (puedes implementar lógica específica aquí)
+        if (!$student->student_code) {
+            $group = Group::find($data['group_id']);
+            $groupCode = $group ? $group->code : 'X';
+            $student->student_code = $groupCode . '-' . str_pad($data['order_number'], 2, '0', STR_PAD_LEFT);
+            $student->save();
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'message' => 'Estudiante creado correctamente',
+                'student' => [
+                    'id' => $student->id,
+                    'full_name' => $student->names . ' ' . $student->paternal_surname . ($student->maternal_surname ? ' ' . $student->maternal_surname : ''),
+                    'names' => $student->names,
+                    'paternal_surname' => $student->paternal_surname,
+                    'maternal_surname' => $student->maternal_surname,
+                    'group_id' => $student->group_id,
+                    'order_number' => $student->order_number,
+                    'student_code' => $student->student_code,
+                    'status' => $student->estado
+                ]
+            ], 201);
+        }
+
+        return redirect()->route('students.index')->with('success', 'Estudiante creado correctamente');
+    }
 
     /**
      * Mostrar códigos QR de estudiantes.

@@ -125,14 +125,16 @@ Route::middleware(['auth.custom'])->group(function () {
         // Vistas principales de estudiantes (todos los usuarios autenticados)
         Route::get('/', [StudentController::class, 'index'])->name('index');
         Route::get('/qr-codes', [StudentController::class, 'qrCodes'])->name('qr-codes');
-    // Detalles (AJAX partial)
-    Route::get('/{student}/details', [StudentController::class, 'details'])->name('details');
-
-    // Partial para mostrar QR individual en modal (AJAX)
-    Route::get('/{student}/qr-modal', [StudentController::class, 'showQrModal'])->name('qr.modal');
         
-        // Funcionalidades de códigos QR (Admin y Profesor)
+        // Detalles (AJAX partial)
+        Route::get('/{student}/details', [StudentController::class, 'details'])->name('details');
+
+        // Partial para mostrar QR individual en modal (AJAX)
+        Route::get('/{student}/qr-modal', [StudentController::class, 'showQrModal'])->name('qr.modal');
+        
+        // Crear y editar estudiantes (Admin y Profesor)
         Route::middleware(['role:Admin,Profesor'])->group(function () {
+            Route::post('/', [StudentController::class, 'store'])->name('store');
             Route::get('/{student}/qr-download-png', [StudentController::class, 'downloadQrPng'])->name('qr.download.png');
             Route::get('/{student}/qr-download-pdf', [StudentController::class, 'downloadQrPdf'])->name('qr.download.pdf');
             Route::post('/{student}/qr-regenerate', [StudentController::class, 'regenerateQr'])->name('qr.regenerate');
