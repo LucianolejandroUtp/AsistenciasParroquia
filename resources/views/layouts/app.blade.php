@@ -117,73 +117,9 @@
             }
         }
         
-        /* Sidebar collapsed state */
-        .sidebar-collapsed .main-content {
-            margin-left: 60px;
-            width: calc(100% - 60px);
-        }
-        
-        /* Hide text elements when sidebar is collapsed */
-        .sidebar-collapsed .sidebar-left {
-            width: 60px;
-            transition: width 0.3s ease;
-        }
-        
-        /* Hover behavior for collapsed sidebar - expand temporarily */
-        .sidebar-collapsed .sidebar-left:hover {
-            width: 240px;
-        }
-        
-        .sidebar-collapsed .item-text,
-        .sidebar-collapsed .nav-heading span,
-        .sidebar-collapsed .navbar-brand small {
-            display: none;
-            transition: opacity 0.3s ease;
-        }
-        
-        /* Show text on hover when sidebar is collapsed */
-        .sidebar-collapsed .sidebar-left:hover .item-text,
-        .sidebar-collapsed .sidebar-left:hover .nav-heading span,
-        .sidebar-collapsed .sidebar-left:hover .navbar-brand small {
-            display: initial;
-            opacity: 1;
-        }
-        
-        .sidebar-collapsed .navbar-brand .d-flex {
-            justify-content: center;
-        }
-        
-        /* Restore normal flex behavior on hover */
-        .sidebar-collapsed .sidebar-left:hover .navbar-brand .d-flex {
-            justify-content: flex-start;
-        }
-        
-        /* Hide theme switcher when sidebar is collapsed, keep sidebar toggle visible */
-        .sidebar-collapsed .theme-switcher-item {
-            display: none;
-        }
-        
-        /* Show theme switcher icon only when collapsed */
-        .sidebar-collapsed .theme-switcher-item .nav-link {
-            display: flex !important;
-            justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
-        }
-        
-        .sidebar-collapsed .theme-switcher-item {
-            display: block !important;
-        }
-        
-        /* Hide only the text, keep icon visible */
-        .sidebar-collapsed .theme-switcher-item .item-text {
-            display: none !important;
-        }
-        
-        /* Show text on hover */
-        .sidebar-collapsed .sidebar-left:hover .theme-switcher-item .item-text {
-            display: initial !important;
-        }
+        /* NOTE: Desktop sidebar collapsed functionality REMOVED */
+        /* Sidebar is always expanded at 240px width on desktop */
+        /* Mobile functionality preserved below */
         
         /* Enhanced sidebar styling */
         .sidebar-left {
@@ -272,13 +208,8 @@
 
                 <!-- Quick Tools -->
                 <ul class="navbar-nav flex-fill w-100 mb-2">
-                    <!-- Sidebar Toggle -->
-                    <li class="nav-item d-none d-lg-block">
-                        <a href="#" class="nav-link collapseSidebar" title="Contraer sidebar">
-                            <i class="fe fe-menu fe-16"></i>
-                            <span class="ml-3 item-text">Contraer</span>
-                        </a>
-                    </li>
+                    <!-- Sidebar Toggle - REMOVED FOR DESKTOP -->
+                    <!-- Mobile sidebar toggle is handled by #mobileMenuBtn -->
                     
                     <!-- Theme Switcher -->
                     <li class="nav-item theme-switcher-item">
@@ -599,22 +530,8 @@
                 toggleMobileSidebar();
             });
             
-            // Desktop sidebar collapse handling
-            $('.collapseSidebar').on('click', function(e) {
-                e.preventDefault();
-                
-                if ($(window).width() >= 992) {
-                    // Desktop behavior
-                    $('body').toggleClass('sidebar-collapsed');
-                    
-                    // Save state in localStorage
-                    const isCollapsed = $('body').hasClass('sidebar-collapsed');
-                    localStorage.setItem('sidebar-collapsed', isCollapsed);
-                } else {
-                    // Mobile behavior
-                    toggleMobileSidebar();
-                }
-            });
+            // NOTE: Desktop sidebar collapse functionality REMOVED
+            // Only mobile sidebar toggle remains active via #mobileMenuBtn
             
             // Enhanced theme switcher
             $('#modeSwitcher').on('click', function(e) {
@@ -646,13 +563,8 @@
                 localStorage.setItem('theme', newMode);
             });
             
-            // Restore sidebar state on page load (desktop only)
-            if ($(window).width() >= 992) {
-                const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-                if (sidebarCollapsed) {
-                    $('body').addClass('sidebar-collapsed');
-                }
-            }
+            // NOTE: Sidebar collapse state restoration REMOVED for desktop
+            // Sidebar is always expanded on desktop now
             
             // Restore theme on page load
             const savedTheme = localStorage.getItem('theme') || 'light';
