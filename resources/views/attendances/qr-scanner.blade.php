@@ -736,11 +736,49 @@ document.addEventListener('DOMContentLoaded', function() {
         processQRCode(decodedText);
     }
 
+    // Variables para throttling de errores
+    let lastErrorLog = 0;
+    let errorLogInterval = 10000; // 10 segundos entre logs del mismo tipo
+    
     // Manejar errores de escaneo
     function handleScanError(errorMessage, error) {
-        // Solo loggear errores importantes, no los de "No MultiFormat Readers"
-        if (errorMessage && !errorMessage.includes('NotFoundException') && !errorMessage.includes('No MultiFormat Readers')) {
-            console.warn('Error de escaneo:', errorMessage);
+        // Filtrar errores informativos normales (operación normal del scanner)
+        const normalErrors = [
+            'NotFoundException',
+            'No MultiFormat Readers',
+            'No barcode or QR code detected',
+            'QR code parse error',
+            'NotFoundError',
+            'Cannot access camera',
+            'No QR code found'
+        ];
+        
+        // Solo loggear errores realmente importantes
+        const isNormalError = normalErrors.some(normalError => 
+            errorMessage && errorMessage.includes(normalError)
+        );
+        
+        if (!isNormalError && errorMessage) {
+            // Implementar throttling para errores importantes
+            const currentTime = Date.now();
+            if (currentTime - lastErrorLog > errorLogInterval) {
+                console.warn('Error importante del scanner:', errorMessage);
+                lastErrorLog = currentTime;
+                
+                // Solo mostrar toast para errores realmente críticos
+                if (errorMessage.includes('Permission') || errorMessage.includes('NotAllowed')) {
+                    showToast('Error de permisos de cámara: ' + errorMessage, 'error');
+                }
+            }
+        }
+        
+        // Para debugging (solo en desarrollo), loggear estadísticas cada 30 segundos
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const debugInterval = 30000; // 30 segundos
+            if (Date.now() - lastErrorLog > debugInterval && errorMessage && errorMessage.includes('No barcode')) {
+                console.debug('Scanner activo - buscando códigos QR...');
+                lastErrorLog = Date.now();
+            }
         }
     }
 
