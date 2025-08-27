@@ -804,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showScanResult(data.data);
+                showScanResult(data.data, scanMode);
                 addRecentScan(data.data);
                 updateScanStats();
                 showToast('Asistencia registrada: ' + data.data.student_name, 'success');
@@ -825,28 +825,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function showScanResult(scanData) {
-        const modalContent = document.getElementById('scan-result-content');
-        if (modalContent) {
-            modalContent.innerHTML = `
-                <div class="text-center">
-                    <h5 class="mb-1">${scanData.student_name}</h5>
-                    <p class="text-muted mb-3">
-                        <span class="badge badge-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">${scanData.group}</span>
-                    </p>
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <div class="h6 mb-0">${scanData.qr_code}</div>
-                            <small class="text-muted">Código QR</small>
-                        </div>
-                        <div class="col-6">
-                            <div class="h6 mb-0">${scanData.marked_at}</div>
-                            <small class="text-muted">Hora de Registro</small>
+    function showScanResult(scanData, mode = 'continuous') {
+        // Solo mostrar modal en modo individual
+        if (mode === 'single') {
+            const modalContent = document.getElementById('scan-result-content');
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div class="text-center">
+                        <h5 class="mb-1">${scanData.student_name}</h5>
+                        <p class="text-muted mb-3">
+                            <span class="badge badge-${scanData.group === 'Grupo A' ? 'primary' : 'info'}">${scanData.group}</span>
+                        </p>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="h6 mb-0">${scanData.qr_code}</div>
+                                <small class="text-muted">Código QR</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="h6 mb-0">${scanData.marked_at}</div>
+                                <small class="text-muted">Hora de Registro</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-            $('#scanResultModal').modal('show');
+                `;
+                $('#scanResultModal').modal('show');
+            }
+        }
+        
+        // En modo continuo, solo actualizar la información del último escaneo
+        if (mode === 'continuous') {
+            const lastScanInfo = document.getElementById('last-scan-info');
+            const lastScanCode = document.getElementById('last-scan-code');
+            const lastScanStatus = document.getElementById('last-scan-status');
+            
+            if (lastScanInfo && lastScanCode && lastScanStatus) {
+                lastScanCode.textContent = scanData.qr_code;
+                lastScanStatus.textContent = scanData.student_name;
+                lastScanStatus.className = 'badge badge-success';
+                lastScanInfo.style.display = 'block';
+            }
         }
     }
     
